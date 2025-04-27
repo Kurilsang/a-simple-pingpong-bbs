@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.pingpong_bbsdemo.mappers.ReportsMapper">
+
+	<!--实体映射-->
+	<resultMap id="base_result_map" type="org.example.pingpong_bbsdemo.entity.po.Reports">
+		<!--举报ID，唯一标识举报记录-->
+		<id column="report_id" property="reportId"  />
+		<!--举报者ID，关联users表的user_id-->
+		<result column="reporter_id" property="reporterId"  />
+		<!--被举报帖子ID，关联posts表的post_id-->
+		<result column="post_id" property="postId"  />
+		<!--被举报评论ID，关联comments表的comment_id-->
+		<result column="comment_id" property="commentId"  />
+		<!--举报原因-->
+		<result column="reason" property="reason"  />
+		<!--举报处理状态，0-未处理，1-已处理-->
+		<result column="status" property="status"  />
+		<!--举报时间-->
+		<result column="created_at" property="createdAt"  />
+	</resultMap>
+
+
+	<!-- 通用查询结果列-->
+	<sql id="base_column_list">
+		 r.report_id,r.reporter_id,r.post_id,r.comment_id,r.reason,
+		 r.status,r.created_at
+	</sql>
+
+	<sql id="base_condition_filed">
+			<if test="query.reportId != null">
+				 and  r.report_id = #{query.reportId}
+			</if>
+			<if test="query.reporterId != null">
+				 and  r.reporter_id = #{query.reporterId}
+			</if>
+			<if test="query.postId != null">
+				 and  r.post_id = #{query.postId}
+			</if>
+			<if test="query.commentId != null">
+				 and  r.comment_id = #{query.commentId}
+			</if>
+			<if test="query.reason != null and query.reason!=''">
+				 and  r.reason = #{query.reason}
+			</if>
+			<if test="query.status != null">
+				 and  r.status = #{query.status}
+			</if>
+			<if test="query.createdAt != null and query.createdAt!=''">
+				 <![CDATA[ and  r.created_at=str_to_date(#{query.createdAt}, '%Y-%m-%d') ]]>
+			</if>
+	</sql>
+	<!-- 通用条件列-->
+	<sql id="base_condition">
+	 <where>
+		 <include refid="base_condition_filed" />
+	 </where>
+	</sql>
+
+	<!-- 通用查询条件列-->
+	<sql id="query_condition">
+	 <where>
+			<include refid="base_condition_filed" />
+			<if test="query.reasonFuzzy!= null  and query.reasonFuzzy!=''">
+				 and  r.reason like concat('%', #{query.reasonFuzzy}, '%')
+			</if>
+			<if test="query.createdAtStart!= null and query.createdAtStart!=''">
+				 <![CDATA[ and  r.created_at>=str_to_date(#{query.createdAtStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.createdAtEnd!= null and query.createdAtEnd!=''">
+				 <![CDATA[ and  r.created_at< date_sub(str_to_date(#{query.createdAtEnd},'%Y-%m-%d'),interval -1 day) ]]>
+			</if>
+	 </where>
+	</sql>
+
+	<!-- 查询集合-->
+	<select id="selectList" resultMap="base_result_map" >
+		 SELECT <include refid="base_column_list" /> FROM reports r <include refid="query_condition" />
+		 <if test="query.orderBy!=null">
+			 order by ${query.orderBy}
+		 </if>
+		 <if test="query.simplePage!=null">
+			 limit #{query.simplePage.start},#{query.simplePage.end}
+		 </if>
+	</select>
+
+	<!-- 查询数量-->
+	<select id="selectCount" resultType="java.lang.Integer" >
+		 SELECT count(1) FROM reports r <include refid="query_condition" />
+	</select>
+
+	<!-- 插入 （匹配有值的字段）-->
+	<insert id="insert" parameterType="org.example.pingpong_bbsdemo.entity.po.Reports">
+		<selectKey keyProperty="bean.reportId" resultType="Integer" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+		 INSERT INTO reports
+		 <trim prefix="(" suffix=")" suffixOverrides="," >
+			<if test="bean.reporterId != null">
+				 reporter_id,
+			</if>
+			<if test="bean.postId != null">
+				 post_id,
+			</if>
+			<if test="bean.commentId != null">
+				 comment_id,
+			</if>
+			<if test="bean.reason != null">
+				 reason,
+			</if>
+			<if test="bean.status != null">
+				 status,
+			</if>
+			<if test="bean.createdAt != null">
+				 created_at,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides="," >
+			<if test="bean.reporterId!=null">
+				 #{bean.reporterId},
+			</if>
+			<if test="bean.postId!=null">
+				 #{bean.postId},
+			</if>
+			<if test="bean.commentId!=null">
+				 #{bean.commentId},
+			</if>
+			<if test="bean.reason!=null">
+				 #{bean.reason},
+			</if>
+			<if test="bean.status!=null">
+				 #{bean.status},
+			</if>
+			<if test="bean.createdAt!=null">
+				 #{bean.createdAt},
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 插入或者更新 （匹配有值的字段）-->
+	<insert id="insertOrUpdate" parameterType="org.example.pingpong_bbsdemo.entity.po.Reports">
+		 INSERT INTO reports
+		 <trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="bean.reportId != null">
+				 report_id,
+			</if>
+			<if test="bean.reporterId != null">
+				 reporter_id,
+			</if>
+			<if test="bean.postId != null">
+				 post_id,
+			</if>
+			<if test="bean.commentId != null">
+				 comment_id,
+			</if>
+			<if test="bean.reason != null">
+				 reason,
+			</if>
+			<if test="bean.status != null">
+				 status,
+			</if>
+			<if test="bean.createdAt != null">
+				 created_at,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="bean.reportId!=null">
+				 #{bean.reportId},
+			</if>
+			<if test="bean.reporterId!=null">
+				 #{bean.reporterId},
+			</if>
+			<if test="bean.postId!=null">
+				 #{bean.postId},
+			</if>
+			<if test="bean.commentId!=null">
+				 #{bean.commentId},
+			</if>
+			<if test="bean.reason!=null">
+				 #{bean.reason},
+			</if>
+			<if test="bean.status!=null">
+				 #{bean.status},
+			</if>
+			<if test="bean.createdAt!=null">
+				 #{bean.createdAt},
+			</if>
+		 </trim>
+		 on DUPLICATE key update 
+		 <trim prefix="" suffix="" suffixOverrides=",">
+			<if test="bean.reporterId!=null">
+				 reporter_id = VALUES(reporter_id),
+			</if>
+			<if test="bean.postId!=null">
+				 post_id = VALUES(post_id),
+			</if>
+			<if test="bean.commentId!=null">
+				 comment_id = VALUES(comment_id),
+			</if>
+			<if test="bean.reason!=null">
+				 reason = VALUES(reason),
+			</if>
+			<if test="bean.status!=null">
+				 status = VALUES(status),
+			</if>
+			<if test="bean.createdAt!=null">
+				 created_at = VALUES(created_at),
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 添加 （批量插入）-->
+	<insert id="insertBatch" parameterType="org.example.pingpong_bbsdemo.entity.po.Reports" useGeneratedKeys="true" keyProperty="reportId">
+		 INSERT INTO reports(
+			 reporter_id,
+			 post_id,
+			 comment_id,
+			 reason,
+			 status,
+			 created_at
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.reporterId},
+				 #{item.postId},
+				 #{item.commentId},
+				 #{item.reason},
+				 #{item.status},
+				 #{item.createdAt}
+			 )
+		 </foreach>
+	</insert>
+
+	<!-- 批量新增修改 （批量插入）-->
+	<insert id="insertOrUpdateBatch" parameterType="org.example.pingpong_bbsdemo.entity.po.Reports">
+		 INSERT INTO reports(
+			 reporter_id,
+			 post_id,
+			 comment_id,
+			 reason,
+			 status,
+			 created_at
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.reporterId},
+				 #{item.postId},
+				 #{item.commentId},
+				 #{item.reason},
+				 #{item.status},
+				 #{item.createdAt}
+			 )
+		 </foreach>
+			on DUPLICATE key update 
+			reporter_id = VALUES(reporter_id),
+			post_id = VALUES(post_id),
+			comment_id = VALUES(comment_id),
+			reason = VALUES(reason),
+			status = VALUES(status),
+			created_at = VALUES(created_at)
+	</insert>
+
+	<!--多条件修改-->
+	<update id="updateByParam" parameterType="org.example.pingpong_bbsdemo.entity.query.ReportsQuery">
+		 UPDATE reports r
+ 		 <set> 
+			<if test="bean.reporterId != null">
+				 reporter_id = #{bean.reporterId},
+			</if>
+			<if test="bean.postId != null">
+				 post_id = #{bean.postId},
+			</if>
+			<if test="bean.commentId != null">
+				 comment_id = #{bean.commentId},
+			</if>
+			<if test="bean.reason != null">
+				 reason = #{bean.reason},
+			</if>
+			<if test="bean.status != null">
+				 status = #{bean.status},
+			</if>
+			<if test="bean.createdAt != null">
+				 created_at = #{bean.createdAt},
+			</if>
+ 		 </set>
+ 		 <include refid="query_condition" />
+	</update>
+
+	<!--多条件删除-->
+	<delete id="deleteByParam">
+		 delete r from reports r
+ 		 <include refid="query_condition" />
+	</delete>
+
+	<!-- 根据ReportId修改-->
+	<update id="updateByReportId" parameterType="org.example.pingpong_bbsdemo.entity.po.Reports">
+		 UPDATE reports
+ 		 <set> 
+			<if test="bean.reporterId != null">
+				 reporter_id = #{bean.reporterId},
+			</if>
+			<if test="bean.postId != null">
+				 post_id = #{bean.postId},
+			</if>
+			<if test="bean.commentId != null">
+				 comment_id = #{bean.commentId},
+			</if>
+			<if test="bean.reason != null">
+				 reason = #{bean.reason},
+			</if>
+			<if test="bean.status != null">
+				 status = #{bean.status},
+			</if>
+			<if test="bean.createdAt != null">
+				 created_at = #{bean.createdAt},
+			</if>
+ 		 </set>
+ 		 where report_id=#{reportId}
+	</update>
+
+	<!-- 根据ReportId删除-->
+	<delete id="deleteByReportId">
+		delete from reports where report_id=#{reportId}
+	</delete>
+
+	<!-- 根据PrimaryKey获取对象-->
+	<select id="selectByReportId" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from reports r where report_id=#{reportId}
+	</select>
+
+</mapper>

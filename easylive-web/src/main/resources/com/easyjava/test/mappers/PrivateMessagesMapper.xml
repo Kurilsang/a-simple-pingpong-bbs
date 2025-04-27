@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.easyjava.test.mappers.PrivateMessagesMapper">
+
+	<!--实体映射-->
+	<resultMap id="base_result_map" type="com.easyjava.test.entity.po.PrivateMessages">
+		<!--私信ID，唯一标识私信-->
+		<id column="message_id" property="messageId"  />
+		<!--发送者ID，关联users表的user_id-->
+		<result column="sender_id" property="senderId"  />
+		<!--接收者ID，关联users表的user_id-->
+		<result column="receiver_id" property="receiverId"  />
+		<!--私信内容-->
+		<result column="content" property="content"  />
+		<!--私信发送时间-->
+		<result column="created_at" property="createdAt"  />
+		<!--是否已读，0-未读，1-已读-->
+		<result column="is_read" property="isRead"  />
+	</resultMap>
+
+
+	<!-- 通用查询结果列-->
+	<sql id="base_column_list">
+		 p.message_id,p.sender_id,p.receiver_id,p.content,p.created_at,
+		 p.is_read
+	</sql>
+
+	<sql id="base_condition_filed">
+			<if test="query.messageId != null">
+				 and  p.message_id = #{query.messageId}
+			</if>
+			<if test="query.senderId != null">
+				 and  p.sender_id = #{query.senderId}
+			</if>
+			<if test="query.receiverId != null">
+				 and  p.receiver_id = #{query.receiverId}
+			</if>
+			<if test="query.content != null and query.content!=''">
+				 and  p.content = #{query.content}
+			</if>
+			<if test="query.createdAt != null and query.createdAt!=''">
+				 <![CDATA[ and  p.created_at=str_to_date(#{query.createdAt}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.isRead != null">
+				 and  p.is_read = #{query.isRead}
+			</if>
+	</sql>
+	<!-- 通用条件列-->
+	<sql id="base_condition">
+	 <where>
+		 <include refid="base_condition_filed" />
+	 </where>
+	</sql>
+
+	<!-- 通用查询条件列-->
+	<sql id="query_condition">
+	 <where>
+			<include refid="base_condition_filed" />
+			<if test="query.contentFuzzy!= null  and query.contentFuzzy!=''">
+				 and  p.content like concat('%', #{query.contentFuzzy}, '%')
+			</if>
+			<if test="query.createdAtStart!= null and query.createdAtStart!=''">
+				 <![CDATA[ and  p.created_at>=str_to_date(#{query.createdAtStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.createdAtEnd!= null and query.createdAtEnd!=''">
+				 <![CDATA[ and  p.created_at< date_sub(str_to_date(#{query.createdAtEnd},'%Y-%m-%d'),interval -1 day) ]]>
+			</if>
+	 </where>
+	</sql>
+
+	<!-- 查询集合-->
+	<select id="selectList" resultMap="base_result_map" >
+		 SELECT <include refid="base_column_list" /> FROM private_messages p <include refid="query_condition" />
+		 <if test="query.orderBy!=null">
+			 order by ${query.orderBy}
+		 </if>
+		 <if test="query.simplePage!=null">
+			 limit #{query.simplePage.start},#{query.simplePage.end}
+		 </if>
+	</select>
+
+	<!-- 查询数量-->
+	<select id="selectCount" resultType="java.lang.Integer" >
+		 SELECT count(1) FROM private_messages p <include refid="query_condition" />
+	</select>
+
+	<!-- 插入 （匹配有值的字段）-->
+	<insert id="insert" parameterType="com.easyjava.test.entity.po.PrivateMessages">
+		<selectKey keyProperty="bean.messageId" resultType="Integer" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+		 INSERT INTO private_messages
+		 <trim prefix="(" suffix=")" suffixOverrides="," >
+			<if test="bean.senderId != null">
+				 sender_id,
+			</if>
+			<if test="bean.receiverId != null">
+				 receiver_id,
+			</if>
+			<if test="bean.content != null">
+				 content,
+			</if>
+			<if test="bean.createdAt != null">
+				 created_at,
+			</if>
+			<if test="bean.isRead != null">
+				 is_read,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides="," >
+			<if test="bean.senderId!=null">
+				 #{bean.senderId},
+			</if>
+			<if test="bean.receiverId!=null">
+				 #{bean.receiverId},
+			</if>
+			<if test="bean.content!=null">
+				 #{bean.content},
+			</if>
+			<if test="bean.createdAt!=null">
+				 #{bean.createdAt},
+			</if>
+			<if test="bean.isRead!=null">
+				 #{bean.isRead},
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 插入或者更新 （匹配有值的字段）-->
+	<insert id="insertOrUpdate" parameterType="com.easyjava.test.entity.po.PrivateMessages">
+		 INSERT INTO private_messages
+		 <trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="bean.messageId != null">
+				 message_id,
+			</if>
+			<if test="bean.senderId != null">
+				 sender_id,
+			</if>
+			<if test="bean.receiverId != null">
+				 receiver_id,
+			</if>
+			<if test="bean.content != null">
+				 content,
+			</if>
+			<if test="bean.createdAt != null">
+				 created_at,
+			</if>
+			<if test="bean.isRead != null">
+				 is_read,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="bean.messageId!=null">
+				 #{bean.messageId},
+			</if>
+			<if test="bean.senderId!=null">
+				 #{bean.senderId},
+			</if>
+			<if test="bean.receiverId!=null">
+				 #{bean.receiverId},
+			</if>
+			<if test="bean.content!=null">
+				 #{bean.content},
+			</if>
+			<if test="bean.createdAt!=null">
+				 #{bean.createdAt},
+			</if>
+			<if test="bean.isRead!=null">
+				 #{bean.isRead},
+			</if>
+		 </trim>
+		 on DUPLICATE key update 
+		 <trim prefix="" suffix="" suffixOverrides=",">
+			<if test="bean.senderId!=null">
+				 sender_id = VALUES(sender_id),
+			</if>
+			<if test="bean.receiverId!=null">
+				 receiver_id = VALUES(receiver_id),
+			</if>
+			<if test="bean.content!=null">
+				 content = VALUES(content),
+			</if>
+			<if test="bean.createdAt!=null">
+				 created_at = VALUES(created_at),
+			</if>
+			<if test="bean.isRead!=null">
+				 is_read = VALUES(is_read),
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 添加 （批量插入）-->
+	<insert id="insertBatch" parameterType="com.easyjava.test.entity.po.PrivateMessages" useGeneratedKeys="true" keyProperty="messageId">
+		 INSERT INTO private_messages(
+			 sender_id,
+			 receiver_id,
+			 content,
+			 created_at,
+			 is_read
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.senderId},
+				 #{item.receiverId},
+				 #{item.content},
+				 #{item.createdAt},
+				 #{item.isRead}
+			 )
+		 </foreach>
+	</insert>
+
+	<!-- 批量新增修改 （批量插入）-->
+	<insert id="insertOrUpdateBatch" parameterType="com.easyjava.test.entity.po.PrivateMessages">
+		 INSERT INTO private_messages(
+			 sender_id,
+			 receiver_id,
+			 content,
+			 created_at,
+			 is_read
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.senderId},
+				 #{item.receiverId},
+				 #{item.content},
+				 #{item.createdAt},
+				 #{item.isRead}
+			 )
+		 </foreach>
+			on DUPLICATE key update 
+			sender_id = VALUES(sender_id),
+			receiver_id = VALUES(receiver_id),
+			content = VALUES(content),
+			created_at = VALUES(created_at),
+			is_read = VALUES(is_read)
+	</insert>
+
+	<!--多条件修改-->
+	<update id="updateByParam" parameterType="com.easyjava.test.entity.query.PrivateMessagesQuery">
+		 UPDATE private_messages p
+ 		 <set> 
+			<if test="bean.senderId != null">
+				 sender_id = #{bean.senderId},
+			</if>
+			<if test="bean.receiverId != null">
+				 receiver_id = #{bean.receiverId},
+			</if>
+			<if test="bean.content != null">
+				 content = #{bean.content},
+			</if>
+			<if test="bean.createdAt != null">
+				 created_at = #{bean.createdAt},
+			</if>
+			<if test="bean.isRead != null">
+				 is_read = #{bean.isRead},
+			</if>
+ 		 </set>
+ 		 <include refid="query_condition" />
+	</update>
+
+	<!--多条件删除-->
+	<delete id="deleteByParam">
+		 delete p from private_messages p
+ 		 <include refid="query_condition" />
+	</delete>
+
+	<!-- 根据MessageId修改-->
+	<update id="updateByMessageId" parameterType="com.easyjava.test.entity.po.PrivateMessages">
+		 UPDATE private_messages
+ 		 <set> 
+			<if test="bean.senderId != null">
+				 sender_id = #{bean.senderId},
+			</if>
+			<if test="bean.receiverId != null">
+				 receiver_id = #{bean.receiverId},
+			</if>
+			<if test="bean.content != null">
+				 content = #{bean.content},
+			</if>
+			<if test="bean.createdAt != null">
+				 created_at = #{bean.createdAt},
+			</if>
+			<if test="bean.isRead != null">
+				 is_read = #{bean.isRead},
+			</if>
+ 		 </set>
+ 		 where message_id=#{messageId}
+	</update>
+
+	<!-- 根据MessageId删除-->
+	<delete id="deleteByMessageId">
+		delete from private_messages where message_id=#{messageId}
+	</delete>
+
+	<!-- 根据PrimaryKey获取对象-->
+	<select id="selectByMessageId" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from private_messages p where message_id=#{messageId}
+	</select>
+
+</mapper>

@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.easyjava.test.mappers.ForumsMapper">
+
+	<!--实体映射-->
+	<resultMap id="base_result_map" type="com.easyjava.test.entity.po.Forums">
+		<!--板块ID，唯一标识板块-->
+		<id column="forum_id" property="forumId"  />
+		<!--板块名称，如技术交流、赛事资讯等-->
+		<result column="forum_name" property="forumName"  />
+		<!--板块描述，介绍板块内容-->
+		<result column="description" property="description"  />
+		<!--板块创建时间-->
+		<result column="created_at" property="createdAt"  />
+	</resultMap>
+
+
+	<!-- 通用查询结果列-->
+	<sql id="base_column_list">
+		 f.forum_id,f.forum_name,f.description,f.created_at
+	</sql>
+
+	<sql id="base_condition_filed">
+			<if test="query.forumId != null">
+				 and  f.forum_id = #{query.forumId}
+			</if>
+			<if test="query.forumName != null and query.forumName!=''">
+				 and  f.forum_name = #{query.forumName}
+			</if>
+			<if test="query.description != null and query.description!=''">
+				 and  f.description = #{query.description}
+			</if>
+			<if test="query.createdAt != null and query.createdAt!=''">
+				 <![CDATA[ and  f.created_at=str_to_date(#{query.createdAt}, '%Y-%m-%d') ]]>
+			</if>
+	</sql>
+	<!-- 通用条件列-->
+	<sql id="base_condition">
+	 <where>
+		 <include refid="base_condition_filed" />
+	 </where>
+	</sql>
+
+	<!-- 通用查询条件列-->
+	<sql id="query_condition">
+	 <where>
+			<include refid="base_condition_filed" />
+			<if test="query.forumNameFuzzy!= null  and query.forumNameFuzzy!=''">
+				 and  f.forum_name like concat('%', #{query.forumNameFuzzy}, '%')
+			</if>
+			<if test="query.descriptionFuzzy!= null  and query.descriptionFuzzy!=''">
+				 and  f.description like concat('%', #{query.descriptionFuzzy}, '%')
+			</if>
+			<if test="query.createdAtStart!= null and query.createdAtStart!=''">
+				 <![CDATA[ and  f.created_at>=str_to_date(#{query.createdAtStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.createdAtEnd!= null and query.createdAtEnd!=''">
+				 <![CDATA[ and  f.created_at< date_sub(str_to_date(#{query.createdAtEnd},'%Y-%m-%d'),interval -1 day) ]]>
+			</if>
+	 </where>
+	</sql>
+
+	<!-- 查询集合-->
+	<select id="selectList" resultMap="base_result_map" >
+		 SELECT <include refid="base_column_list" /> FROM forums f <include refid="query_condition" />
+		 <if test="query.orderBy!=null">
+			 order by ${query.orderBy}
+		 </if>
+		 <if test="query.simplePage!=null">
+			 limit #{query.simplePage.start},#{query.simplePage.end}
+		 </if>
+	</select>
+
+	<!-- 查询数量-->
+	<select id="selectCount" resultType="java.lang.Integer" >
+		 SELECT count(1) FROM forums f <include refid="query_condition" />
+	</select>
+
+	<!-- 插入 （匹配有值的字段）-->
+	<insert id="insert" parameterType="com.easyjava.test.entity.po.Forums">
+		<selectKey keyProperty="bean.forumId" resultType="Integer" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+		 INSERT INTO forums
+		 <trim prefix="(" suffix=")" suffixOverrides="," >
+			<if test="bean.forumName != null">
+				 forum_name,
+			</if>
+			<if test="bean.description != null">
+				 description,
+			</if>
+			<if test="bean.createdAt != null">
+				 created_at,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides="," >
+			<if test="bean.forumName!=null">
+				 #{bean.forumName},
+			</if>
+			<if test="bean.description!=null">
+				 #{bean.description},
+			</if>
+			<if test="bean.createdAt!=null">
+				 #{bean.createdAt},
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 插入或者更新 （匹配有值的字段）-->
+	<insert id="insertOrUpdate" parameterType="com.easyjava.test.entity.po.Forums">
+		 INSERT INTO forums
+		 <trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="bean.forumId != null">
+				 forum_id,
+			</if>
+			<if test="bean.forumName != null">
+				 forum_name,
+			</if>
+			<if test="bean.description != null">
+				 description,
+			</if>
+			<if test="bean.createdAt != null">
+				 created_at,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="bean.forumId!=null">
+				 #{bean.forumId},
+			</if>
+			<if test="bean.forumName!=null">
+				 #{bean.forumName},
+			</if>
+			<if test="bean.description!=null">
+				 #{bean.description},
+			</if>
+			<if test="bean.createdAt!=null">
+				 #{bean.createdAt},
+			</if>
+		 </trim>
+		 on DUPLICATE key update 
+		 <trim prefix="" suffix="" suffixOverrides=",">
+			<if test="bean.forumName!=null">
+				 forum_name = VALUES(forum_name),
+			</if>
+			<if test="bean.description!=null">
+				 description = VALUES(description),
+			</if>
+			<if test="bean.createdAt!=null">
+				 created_at = VALUES(created_at),
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 添加 （批量插入）-->
+	<insert id="insertBatch" parameterType="com.easyjava.test.entity.po.Forums" useGeneratedKeys="true" keyProperty="forumId">
+		 INSERT INTO forums(
+			 forum_name,
+			 description,
+			 created_at
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.forumName},
+				 #{item.description},
+				 #{item.createdAt}
+			 )
+		 </foreach>
+	</insert>
+
+	<!-- 批量新增修改 （批量插入）-->
+	<insert id="insertOrUpdateBatch" parameterType="com.easyjava.test.entity.po.Forums">
+		 INSERT INTO forums(
+			 forum_name,
+			 description,
+			 created_at
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.forumName},
+				 #{item.description},
+				 #{item.createdAt}
+			 )
+		 </foreach>
+			on DUPLICATE key update 
+			forum_name = VALUES(forum_name),
+			description = VALUES(description),
+			created_at = VALUES(created_at)
+	</insert>
+
+	<!--多条件修改-->
+	<update id="updateByParam" parameterType="com.easyjava.test.entity.query.ForumsQuery">
+		 UPDATE forums f
+ 		 <set> 
+			<if test="bean.forumName != null">
+				 forum_name = #{bean.forumName},
+			</if>
+			<if test="bean.description != null">
+				 description = #{bean.description},
+			</if>
+			<if test="bean.createdAt != null">
+				 created_at = #{bean.createdAt},
+			</if>
+ 		 </set>
+ 		 <include refid="query_condition" />
+	</update>
+
+	<!--多条件删除-->
+	<delete id="deleteByParam">
+		 delete f from forums f
+ 		 <include refid="query_condition" />
+	</delete>
+
+	<!-- 根据ForumId修改-->
+	<update id="updateByForumId" parameterType="com.easyjava.test.entity.po.Forums">
+		 UPDATE forums
+ 		 <set> 
+			<if test="bean.forumName != null">
+				 forum_name = #{bean.forumName},
+			</if>
+			<if test="bean.description != null">
+				 description = #{bean.description},
+			</if>
+			<if test="bean.createdAt != null">
+				 created_at = #{bean.createdAt},
+			</if>
+ 		 </set>
+ 		 where forum_id=#{forumId}
+	</update>
+
+	<!-- 根据ForumId删除-->
+	<delete id="deleteByForumId">
+		delete from forums where forum_id=#{forumId}
+	</delete>
+
+	<!-- 根据PrimaryKey获取对象-->
+	<select id="selectByForumId" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from forums f where forum_id=#{forumId}
+	</select>
+
+	<!-- 根据ForumName修改-->
+	<update id="updateByForumName" parameterType="com.easyjava.test.entity.po.Forums">
+		 UPDATE forums
+ 		 <set> 
+			<if test="bean.description != null">
+				 description = #{bean.description},
+			</if>
+			<if test="bean.createdAt != null">
+				 created_at = #{bean.createdAt},
+			</if>
+ 		 </set>
+ 		 where forum_name=#{forumName}
+	</update>
+
+	<!-- 根据ForumName删除-->
+	<delete id="deleteByForumName">
+		delete from forums where forum_name=#{forumName}
+	</delete>
+
+	<!-- 根据PrimaryKey获取对象-->
+	<select id="selectByForumName" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from forums f where forum_name=#{forumName}
+	</select>
+
+</mapper>

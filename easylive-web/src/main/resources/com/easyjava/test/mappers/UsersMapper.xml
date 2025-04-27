@@ -1,0 +1,407 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.easyjava.test.mappers.UsersMapper">
+
+	<!--实体映射-->
+	<resultMap id="base_result_map" type="com.easyjava.test.entity.po.Users">
+		<!--用户ID，唯一标识用户-->
+		<id column="user_id" property="userId"  />
+		<!--用户名，用于登录和显示-->
+		<result column="username" property="username"  />
+		<!--用户密码，加密存储-->
+		<result column="password" property="password"  />
+		<!--用户邮箱，用于注册和找回密码-->
+		<result column="email" property="email"  />
+		<!--用户资料，如个人简介等-->
+		<result column="profile" property="profile"  />
+		<!--用户角色，1-普通用户，2-版主，3-管理员-->
+		<result column="role" property="role"  />
+		<!--用户注册时间-->
+		<result column="created_at" property="createdAt"  />
+	</resultMap>
+
+
+	<!-- 通用查询结果列-->
+	<sql id="base_column_list">
+		 u.user_id,u.username,u.password,u.email,u.profile,
+		 u.role,u.created_at
+	</sql>
+
+	<sql id="base_condition_filed">
+			<if test="query.userId != null">
+				 and  u.user_id = #{query.userId}
+			</if>
+			<if test="query.username != null and query.username!=''">
+				 and  u.username = #{query.username}
+			</if>
+			<if test="query.password != null and query.password!=''">
+				 and  u.password = #{query.password}
+			</if>
+			<if test="query.email != null and query.email!=''">
+				 and  u.email = #{query.email}
+			</if>
+			<if test="query.profile != null and query.profile!=''">
+				 and  u.profile = #{query.profile}
+			</if>
+			<if test="query.role != null">
+				 and  u.role = #{query.role}
+			</if>
+			<if test="query.createdAt != null and query.createdAt!=''">
+				 <![CDATA[ and  u.created_at=str_to_date(#{query.createdAt}, '%Y-%m-%d') ]]>
+			</if>
+	</sql>
+	<!-- 通用条件列-->
+	<sql id="base_condition">
+	 <where>
+		 <include refid="base_condition_filed" />
+	 </where>
+	</sql>
+
+	<!-- 通用查询条件列-->
+	<sql id="query_condition">
+	 <where>
+			<include refid="base_condition_filed" />
+			<if test="query.usernameFuzzy!= null  and query.usernameFuzzy!=''">
+				 and  u.username like concat('%', #{query.usernameFuzzy}, '%')
+			</if>
+			<if test="query.passwordFuzzy!= null  and query.passwordFuzzy!=''">
+				 and  u.password like concat('%', #{query.passwordFuzzy}, '%')
+			</if>
+			<if test="query.emailFuzzy!= null  and query.emailFuzzy!=''">
+				 and  u.email like concat('%', #{query.emailFuzzy}, '%')
+			</if>
+			<if test="query.profileFuzzy!= null  and query.profileFuzzy!=''">
+				 and  u.profile like concat('%', #{query.profileFuzzy}, '%')
+			</if>
+			<if test="query.createdAtStart!= null and query.createdAtStart!=''">
+				 <![CDATA[ and  u.created_at>=str_to_date(#{query.createdAtStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.createdAtEnd!= null and query.createdAtEnd!=''">
+				 <![CDATA[ and  u.created_at< date_sub(str_to_date(#{query.createdAtEnd},'%Y-%m-%d'),interval -1 day) ]]>
+			</if>
+	 </where>
+	</sql>
+
+	<!-- 查询集合-->
+	<select id="selectList" resultMap="base_result_map" >
+		 SELECT <include refid="base_column_list" /> FROM users u <include refid="query_condition" />
+		 <if test="query.orderBy!=null">
+			 order by ${query.orderBy}
+		 </if>
+		 <if test="query.simplePage!=null">
+			 limit #{query.simplePage.start},#{query.simplePage.end}
+		 </if>
+	</select>
+
+	<!-- 查询数量-->
+	<select id="selectCount" resultType="java.lang.Integer" >
+		 SELECT count(1) FROM users u <include refid="query_condition" />
+	</select>
+
+	<!-- 插入 （匹配有值的字段）-->
+	<insert id="insert" parameterType="com.easyjava.test.entity.po.Users">
+		<selectKey keyProperty="bean.userId" resultType="Integer" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+		 INSERT INTO users
+		 <trim prefix="(" suffix=")" suffixOverrides="," >
+			<if test="bean.username != null">
+				 username,
+			</if>
+			<if test="bean.password != null">
+				 password,
+			</if>
+			<if test="bean.email != null">
+				 email,
+			</if>
+			<if test="bean.profile != null">
+				 profile,
+			</if>
+			<if test="bean.role != null">
+				 role,
+			</if>
+			<if test="bean.createdAt != null">
+				 created_at,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides="," >
+			<if test="bean.username!=null">
+				 #{bean.username},
+			</if>
+			<if test="bean.password!=null">
+				 #{bean.password},
+			</if>
+			<if test="bean.email!=null">
+				 #{bean.email},
+			</if>
+			<if test="bean.profile!=null">
+				 #{bean.profile},
+			</if>
+			<if test="bean.role!=null">
+				 #{bean.role},
+			</if>
+			<if test="bean.createdAt!=null">
+				 #{bean.createdAt},
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 插入或者更新 （匹配有值的字段）-->
+	<insert id="insertOrUpdate" parameterType="com.easyjava.test.entity.po.Users">
+		 INSERT INTO users
+		 <trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="bean.userId != null">
+				 user_id,
+			</if>
+			<if test="bean.username != null">
+				 username,
+			</if>
+			<if test="bean.password != null">
+				 password,
+			</if>
+			<if test="bean.email != null">
+				 email,
+			</if>
+			<if test="bean.profile != null">
+				 profile,
+			</if>
+			<if test="bean.role != null">
+				 role,
+			</if>
+			<if test="bean.createdAt != null">
+				 created_at,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="bean.userId!=null">
+				 #{bean.userId},
+			</if>
+			<if test="bean.username!=null">
+				 #{bean.username},
+			</if>
+			<if test="bean.password!=null">
+				 #{bean.password},
+			</if>
+			<if test="bean.email!=null">
+				 #{bean.email},
+			</if>
+			<if test="bean.profile!=null">
+				 #{bean.profile},
+			</if>
+			<if test="bean.role!=null">
+				 #{bean.role},
+			</if>
+			<if test="bean.createdAt!=null">
+				 #{bean.createdAt},
+			</if>
+		 </trim>
+		 on DUPLICATE key update 
+		 <trim prefix="" suffix="" suffixOverrides=",">
+			<if test="bean.username!=null">
+				 username = VALUES(username),
+			</if>
+			<if test="bean.password!=null">
+				 password = VALUES(password),
+			</if>
+			<if test="bean.email!=null">
+				 email = VALUES(email),
+			</if>
+			<if test="bean.profile!=null">
+				 profile = VALUES(profile),
+			</if>
+			<if test="bean.role!=null">
+				 role = VALUES(role),
+			</if>
+			<if test="bean.createdAt!=null">
+				 created_at = VALUES(created_at),
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 添加 （批量插入）-->
+	<insert id="insertBatch" parameterType="com.easyjava.test.entity.po.Users" useGeneratedKeys="true" keyProperty="userId">
+		 INSERT INTO users(
+			 username,
+			 password,
+			 email,
+			 profile,
+			 role,
+			 created_at
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.username},
+				 #{item.password},
+				 #{item.email},
+				 #{item.profile},
+				 #{item.role},
+				 #{item.createdAt}
+			 )
+		 </foreach>
+	</insert>
+
+	<!-- 批量新增修改 （批量插入）-->
+	<insert id="insertOrUpdateBatch" parameterType="com.easyjava.test.entity.po.Users">
+		 INSERT INTO users(
+			 username,
+			 password,
+			 email,
+			 profile,
+			 role,
+			 created_at
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.username},
+				 #{item.password},
+				 #{item.email},
+				 #{item.profile},
+				 #{item.role},
+				 #{item.createdAt}
+			 )
+		 </foreach>
+			on DUPLICATE key update 
+			username = VALUES(username),
+			password = VALUES(password),
+			email = VALUES(email),
+			profile = VALUES(profile),
+			role = VALUES(role),
+			created_at = VALUES(created_at)
+	</insert>
+
+	<!--多条件修改-->
+	<update id="updateByParam" parameterType="com.easyjava.test.entity.query.UsersQuery">
+		 UPDATE users u
+ 		 <set> 
+			<if test="bean.username != null">
+				 username = #{bean.username},
+			</if>
+			<if test="bean.password != null">
+				 password = #{bean.password},
+			</if>
+			<if test="bean.email != null">
+				 email = #{bean.email},
+			</if>
+			<if test="bean.profile != null">
+				 profile = #{bean.profile},
+			</if>
+			<if test="bean.role != null">
+				 role = #{bean.role},
+			</if>
+			<if test="bean.createdAt != null">
+				 created_at = #{bean.createdAt},
+			</if>
+ 		 </set>
+ 		 <include refid="query_condition" />
+	</update>
+
+	<!--多条件删除-->
+	<delete id="deleteByParam">
+		 delete u from users u
+ 		 <include refid="query_condition" />
+	</delete>
+
+	<!-- 根据UserId修改-->
+	<update id="updateByUserId" parameterType="com.easyjava.test.entity.po.Users">
+		 UPDATE users
+ 		 <set> 
+			<if test="bean.username != null">
+				 username = #{bean.username},
+			</if>
+			<if test="bean.password != null">
+				 password = #{bean.password},
+			</if>
+			<if test="bean.email != null">
+				 email = #{bean.email},
+			</if>
+			<if test="bean.profile != null">
+				 profile = #{bean.profile},
+			</if>
+			<if test="bean.role != null">
+				 role = #{bean.role},
+			</if>
+			<if test="bean.createdAt != null">
+				 created_at = #{bean.createdAt},
+			</if>
+ 		 </set>
+ 		 where user_id=#{userId}
+	</update>
+
+	<!-- 根据UserId删除-->
+	<delete id="deleteByUserId">
+		delete from users where user_id=#{userId}
+	</delete>
+
+	<!-- 根据PrimaryKey获取对象-->
+	<select id="selectByUserId" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from users u where user_id=#{userId}
+	</select>
+
+	<!-- 根据Username修改-->
+	<update id="updateByUsername" parameterType="com.easyjava.test.entity.po.Users">
+		 UPDATE users
+ 		 <set> 
+			<if test="bean.password != null">
+				 password = #{bean.password},
+			</if>
+			<if test="bean.email != null">
+				 email = #{bean.email},
+			</if>
+			<if test="bean.profile != null">
+				 profile = #{bean.profile},
+			</if>
+			<if test="bean.role != null">
+				 role = #{bean.role},
+			</if>
+			<if test="bean.createdAt != null">
+				 created_at = #{bean.createdAt},
+			</if>
+ 		 </set>
+ 		 where username=#{username}
+	</update>
+
+	<!-- 根据Username删除-->
+	<delete id="deleteByUsername">
+		delete from users where username=#{username}
+	</delete>
+
+	<!-- 根据PrimaryKey获取对象-->
+	<select id="selectByUsername" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from users u where username=#{username}
+	</select>
+
+	<!-- 根据Email修改-->
+	<update id="updateByEmail" parameterType="com.easyjava.test.entity.po.Users">
+		 UPDATE users
+ 		 <set> 
+			<if test="bean.username != null">
+				 username = #{bean.username},
+			</if>
+			<if test="bean.password != null">
+				 password = #{bean.password},
+			</if>
+			<if test="bean.profile != null">
+				 profile = #{bean.profile},
+			</if>
+			<if test="bean.role != null">
+				 role = #{bean.role},
+			</if>
+			<if test="bean.createdAt != null">
+				 created_at = #{bean.createdAt},
+			</if>
+ 		 </set>
+ 		 where email=#{email}
+	</update>
+
+	<!-- 根据Email删除-->
+	<delete id="deleteByEmail">
+		delete from users where email=#{email}
+	</delete>
+
+	<!-- 根据PrimaryKey获取对象-->
+	<select id="selectByEmail" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from users u where email=#{email}
+	</select>
+
+</mapper>

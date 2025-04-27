@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+    <!-- 引入 Axios 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <title>乒乓球论坛 - 帖子列表</title>
+    <style>
+        /* 自定义过渡动画 */
+        .hover-transition {
+            transition: all 0.3s ease;
+        }
+
+        .overflow-hidden {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* 新增帖子列表动画样式 */
+        .post-item {
+            cursor: pointer;
+            transition: 
+                background-color 0.3s ease, 
+                transform 0.3s ease, 
+                box-shadow 0.3s ease;
+        }
+
+        .post-item:hover {
+            background-color: #f5f5f5; /* 悬浮背景色 */
+            transform: translateY(-4px); /* 悬浮上移4px */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* 悬浮阴影 */
+        }
+
+        .post-item:active, .post-item.clicked {
+            background-color: #f0f0f0; /* 点击/激活背景色 */
+            transform: translateY(1px); /* 点击下沉1px */
+        }
+
+        /* 模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 8px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* 分页按钮样式 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .pagination button {
+            margin: 0 5px;
+            padding: 5px 10px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+            cursor: pointer;
+        }
+
+        .pagination button.active {
+            background-color: #007bff;
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 font-sans text-gray-700">
+    <!-- 导航栏 -->
+    <nav class="bg-gradient-to-r from-blue-600 to-purple-600 p-4 shadow-md">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="index.html" class="text-white text-3xl font-extrabold tracking-wide">乒乓球论坛</a>
+            <div class="flex space-x-6">
+                <a href="/index.html" class="text-white hover:text-gray-300 hover-transition">首页</a>
+                <a href="#" class="text-white hover:text-gray-300 hover-transition">技术交流</a>
+                <a href="#" class="text-white hover:text-gray-300 hover-transition">赛事资讯</a>
+                <a href="#" class="text-white hover:text-gray-300 hover-transition">我的资料</a>
+                <a href="#" onclick="openLoginModal()" id="topLoginBtn"
+                    class="text-white hover:text-gray-300 hover-transition">登录</a>
+                <a href="#" onclick="openRegisterModal()" id="topRegisterBtn"
+                    class="text-white hover:text-gray-300 hover-transition">注册</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 发布帖子按钮 -->
+    <div class="container mx-auto p-8 flex justify-end">
+        <button onclick="openPostModal()"
+            class="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-3 rounded hover:bg-gradient-to-r hover:from-blue-700 hover:to-purple-700 hover-transition">
+            发布帖子
+        </button>
+    </div>
+
+    <!-- 帖子列表 -->
+    <div class="container mx-auto p-6 bg-white rounded-xl shadow-lg">
+        <h2 id="boardTitle" class="text-2xl font-bold text-gray-800 mb-6"></h2>
+        <ul id="postList">
+            <!-- 帖子列表会通过 JavaScript 动态加载 -->
+        </ul>
+    </div>
+
+    <!-- 分页按钮 -->
+    <div class="pagination" id="pagination"></div>
+
+    <!-- 发布帖子模态框 -->
+    <div id="postModal" class="modal" onclick="closeModalOutside(event)">
+        <div class="modal-content">
+            <span class="close" onclick="closePostModal()">&times;</span>
+            <h2 class="text-xl font-bold mb-4">发布帖子</h2>
+            <form id="postForm">
+                <div class="mb-4">
+                    <label for="postTitle" class="block text-gray-700 text-sm font-bold mb-2">标题</label>
+                    <input id="newPostTitle" type="text" id="postTitle"
+                        class="border border-gray-300 p-2 w-full rounded">
+                </div>
+                <div class="mb-4">
+                    <label for="postContent" class="block text-gray-700 text-sm font-bold mb-2">内容</label>
+                    <textarea id="newPostContent" rows="4" class="border border-gray-300 p-2 w-full rounded"></textarea>
+                </div>
+                <button type="submit" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-2 
+                    rounded hover:bg-gradient-to-r hover:from-blue-700 hover:to-purple-700 
+                    hover-transition
+                    id=" addPostButton">
+                    发布
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 登录模态框 -->
+    <div id="loginModal" class="modal" onclick="closeModalOutside(event)">
+        <div class="modal-content">
+            <span class="close" onclick="closeLoginModal()">&times;</span>
+            <h2 class="text-xl font-bold mb-4">登录</h2>
+            <form>
+                <div class="mb-4">
+                    <label for="loginEmail" class="block text-gray-700 text-sm font-bold mb-2">邮箱</label>
+                    <input type="email" id="loginEmail" class="border border-gray-300 p-2 w-full rounded">
+                </div>
+                <div class="mb-4">
+                    <label for="loginPassword" class="block text-gray-700 text-sm font-bold mb-2">密码</label>
+                    <input type="password" id="loginPassword" class="border border-gray-300 p-2 w-full rounded">
+                </div>
+                <div class="mb-4">
+                    <label for="loginCaptcha" class="block text-gray-700 text-sm font-bold mb-2">验证码</label>
+                    <input type="text" id="loginCaptcha" class="border border-gray-300 p-2 w-full rounded">
+                    <img src="" alt="" width="120" height="60" class="mt-2" id="captchaLogin">
+                </div>
+                <button type="submit"
+                    class="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-2 rounded hover:bg-gradient-to-r hover:from-blue-700 hover:to-purple-700 hover-transition"
+                    id="loginButton">登录</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 注册模态框 -->
+    <div id="registerModal" class="modal" onclick="closeModalOutside(event)">
+        <div class="modal-content">
+            <span class="close" onclick="closeRegisterModal()">&times;</span>
+            <h2 class="text-xl font-bold mb-4">注册</h2>
+            <form>
+                <div class="mb-4">
+                    <label for="registerEmail" class="block text-gray-700 text-sm font-bold mb-2">邮箱</label>
+                    <input type="email" id="registerEmail" class="border border-gray-300 p-2 w-full rounded">
+                </div>
+                <div class="mb-4">
+                    <label for="registerNickName" class="block text-gray-700 text-sm font-bold mb-2">昵称</label>
+                    <input type="text" id="registerNickName" class="border border-gray-300 p-2 w-full rounded">
+                </div>
+                <div class="mb-4">
+                    <label for="registerPassword" class="block text-gray-700 text-sm font-bold mb-2">密码</label>
+                    <input type="password" id="registerPassword" class="border border-gray-300 p-2 w-full rounded">
+                </div>
+                <div class="mb-4">
+                    <label for="registerCaptcha" class="block text-gray-700 text-sm font-bold mb-2">验证码</label>
+                    <input type="text" id="registerCaptcha" class="border border-gray-300 p-2 w-full rounded">
+                    <img src="" alt="" width="120" height="60" class="mt-2" id="captchaRegister">
+                </div>
+                <button type="submit"
+                    class="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-2 rounded hover:bg-gradient-to-r hover:from-blue-700 hover:to-purple-700 hover-transition"
+                    id="registerButton">注册</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="bg-gray-900 text-white p-6 mt-8">
+        <div class="container mx-auto text-center">
+            <p>&copy; 2025 乒乓球论坛. 保留所有权利.</p>
+        </div>
+    </footer>
+    <script src="./js/login.js"></script>
+    <script>
+        const pageMax = 10;
+        let currentPage = 1;
+        let totalPages = 1;
+        const boardIndex = {
+            'technology_exchange': 1,
+            'event_information': 2,
+            'equipment_discussion': 3
+        };
+
+        function closeModalOutside(event) {
+            const loginModal = document.getElementById('loginModal');
+            const registerModal = document.getElementById('registerModal');
+            const postModal = document.getElementById('postModal');
+            if (event.target === loginModal) {
+                closeLoginModal();
+            } else if (event.target === registerModal) {
+                closeRegisterModal();
+            } else if (event.target === postModal) {
+                closePostModal();
+            }
+        }
+
+        function openPostModal() {
+            document.getElementById('postModal').style.display = 'block';
+        }
+
+        function closePostModal() {
+            document.getElementById('postModal').style.display = 'none';
+        }
+
+        document.getElementById('postForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = document.getElementById('newPostTitle').value;
+            const content = document.getElementById('newPostContent').value;
+            const forumId = boardIndex[getQueryParam('board')];
+            const userId = getCookie('userId');
+
+            console.log(title, content, forumId, userId);
+            try {
+                axios.post(`${baseURL}/posts/add`, {
+                    'title': title,
+                    'content': content,
+                    'forumId': forumId,
+                    'userId': userId,
+                }).then((response) => {
+                    console.log(response.data);
+                    alert('帖子发布成功');
+                    closePostModal();
+                    loadPosts();
+                });
+            } catch (error) {
+                console.error('发布帖子失败:', error);
+            }
+        });
+
+        async function loadPosts() {
+            autoLogin();
+            const board = getQueryParam('board');
+            const boardTitleMap = {
+                'technology_exchange': '技术交流帖子列表',
+                'event_information': '赛事资讯帖子列表',
+                'equipment_discussion': '器材讨论帖子列表'
+            };
+            const boardIndex = {
+                'technology_exchange': 1,
+                'event_information': 2,
+                'equipment_discussion': 3
+            };
+            const boardTitle = boardTitleMap[board] || '未知板块帖子列表';
+            document.getElementById('boardTitle').textContent = boardTitle;
+            try {
+                const postList = document.getElementById('postList');
+                postList.innerHTML = '';
+
+                axios.get(`http://localhost:7071/web/posts/loadDataList?forumId=${boardIndex[board]}&PageSize=${pageMax}&PageNo=${currentPage}`)
+                    .then(response => {
+                        const posts = response.data.data.list;
+                        const totalCount = response.data.data.totalCount;
+                        totalPages = Math.ceil(totalCount / pageMax);
+
+                        posts.forEach(post => {
+                            const li = document.createElement('li');
+                            li.classList.add('post-item', 'mb-4', 'border-b', 'border-gray-300', 'pb-4'); // 新增 post-item 类
+                            li.addEventListener('click', () => {
+                                // 点击时添加临时点击状态（可选）
+                                li.classList.add('clicked');
+                                setTimeout(() => li.classList.remove('clicked'), 100); // 100ms后移除点击状态
+                                window.location.href = `comments.html?postId=${post.postId}`;
+                            });
+
+                            const title = document.createElement('h3');
+                            title.classList.add('text-xl', 'font-bold', 'text-gray-800', 'mb-2');
+                            title.textContent = post.title;
+
+                            const content = document.createElement('p');
+                            content.classList.add('text-gray-600', 'mb-2', 'overflow-hidden');
+                            content.textContent = post.content;
+
+                            li.appendChild(title);
+                            li.appendChild(content);
+                            postList.appendChild(li);
+                        });
+
+                        renderPagination();
+                    })
+                    .catch(error => {
+                        console.error('加载帖子列表失败:', error);
+                    });
+            } catch (error) {
+                console.error('请求失败:', error);
+            }
+        }
+
+        function renderPagination() {
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
+
+            const prevButton = document.createElement('button');
+            prevButton.textContent = '上一页';
+            prevButton.disabled = currentPage === 1;
+            prevButton.addEventListener('click', () => {
+                currentPage--;
+                loadPosts();
+            });
+            pagination.appendChild(prevButton);
+
+            for (let i = 1; i <= totalPages; i++) {
+                const pageButton = document.createElement('button');
+                pageButton.textContent = i;
+                if (i === currentPage) pageButton.classList.add('active');
+                pageButton.addEventListener('click', () => {
+                    currentPage = i;
+                    loadPosts();
+                });
+                pagination.appendChild(pageButton);
+            }
+
+            const nextButton = document.createElement('button');
+            nextButton.textContent = '下一页';
+            nextButton.disabled = currentPage === totalPages;
+            nextButton.addEventListener('click', () => {
+                currentPage++;
+                loadPosts();
+            });
+            pagination.appendChild(nextButton);
+        }
+
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+
+        window.onload = loadPosts;
+    </script>
+</body>
+
+</html>

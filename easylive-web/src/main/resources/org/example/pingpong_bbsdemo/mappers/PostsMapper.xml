@@ -1,0 +1,403 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.pingpong_bbsdemo.mappers.PostsMapper">
+
+	<!--实体映射-->
+	<resultMap id="base_result_map" type="org.example.pingpong_bbsdemo.entity.po.Posts">
+		<!--帖子ID，唯一标识帖子-->
+		<id column="post_id" property="postId"  />
+		<!--发帖用户ID，关联users表的user_id-->
+		<result column="user_id" property="userId"  />
+		<!--所属板块ID，关联forums表的forum_id-->
+		<result column="forum_id" property="forumId"  />
+		<!--帖子标题-->
+		<result column="title" property="title"  />
+		<!--帖子内容-->
+		<result column="content" property="content"  />
+		<!--是否为精华帖，0-否，1-是-->
+		<result column="is_essence" property="isEssence"  />
+		<!--是否置顶，0-否，1-是-->
+		<result column="is_sticky" property="isSticky"  />
+		<!--帖子创建时间-->
+		<result column="created_at" property="createdAt"  />
+		<!--帖子更新时间-->
+		<result column="updated_at" property="updatedAt"  />
+	</resultMap>
+
+
+	<!-- 通用查询结果列-->
+	<sql id="base_column_list">
+		 p.post_id,p.user_id,p.forum_id,p.title,p.content,
+		 p.is_essence,p.is_sticky,p.created_at,p.updated_at
+	</sql>
+
+	<sql id="base_condition_filed">
+			<if test="query.postId != null">
+				 and  p.post_id = #{query.postId}
+			</if>
+			<if test="query.userId != null">
+				 and  p.user_id = #{query.userId}
+			</if>
+			<if test="query.forumId != null">
+				 and  p.forum_id = #{query.forumId}
+			</if>
+			<if test="query.title != null and query.title!=''">
+				 and  p.title = #{query.title}
+			</if>
+			<if test="query.content != null and query.content!=''">
+				 and  p.content = #{query.content}
+			</if>
+			<if test="query.isEssence != null">
+				 and  p.is_essence = #{query.isEssence}
+			</if>
+			<if test="query.isSticky != null">
+				 and  p.is_sticky = #{query.isSticky}
+			</if>
+			<if test="query.createdAt != null and query.createdAt!=''">
+				 <![CDATA[ and  p.created_at=str_to_date(#{query.createdAt}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.updatedAt != null and query.updatedAt!=''">
+				 <![CDATA[ and  p.updated_at=str_to_date(#{query.updatedAt}, '%Y-%m-%d') ]]>
+			</if>
+	</sql>
+	<!-- 通用条件列-->
+	<sql id="base_condition">
+	 <where>
+		 <include refid="base_condition_filed" />
+	 </where>
+	</sql>
+
+	<!-- 通用查询条件列-->
+	<sql id="query_condition">
+	 <where>
+			<include refid="base_condition_filed" />
+			<if test="query.titleFuzzy!= null  and query.titleFuzzy!=''">
+				 and  p.title like concat('%', #{query.titleFuzzy}, '%')
+			</if>
+			<if test="query.contentFuzzy!= null  and query.contentFuzzy!=''">
+				 and  p.content like concat('%', #{query.contentFuzzy}, '%')
+			</if>
+			<if test="query.createdAtStart!= null and query.createdAtStart!=''">
+				 <![CDATA[ and  p.created_at>=str_to_date(#{query.createdAtStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.createdAtEnd!= null and query.createdAtEnd!=''">
+				 <![CDATA[ and  p.created_at< date_sub(str_to_date(#{query.createdAtEnd},'%Y-%m-%d'),interval -1 day) ]]>
+			</if>
+			<if test="query.updatedAtStart!= null and query.updatedAtStart!=''">
+				 <![CDATA[ and  p.updated_at>=str_to_date(#{query.updatedAtStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.updatedAtEnd!= null and query.updatedAtEnd!=''">
+				 <![CDATA[ and  p.updated_at< date_sub(str_to_date(#{query.updatedAtEnd},'%Y-%m-%d'),interval -1 day) ]]>
+			</if>
+	 </where>
+	</sql>
+
+	<!-- 查询集合-->
+	<select id="selectList" resultMap="base_result_map" >
+		 SELECT <include refid="base_column_list" /> FROM posts p <include refid="query_condition" />
+		 <if test="query.orderBy!=null">
+			 order by ${query.orderBy}
+		 </if>
+		 <if test="query.simplePage!=null">
+			 limit #{query.simplePage.start},#{query.simplePage.end}
+		 </if>
+	</select>
+
+	<!-- 查询数量-->
+	<select id="selectCount" resultType="java.lang.Integer" >
+		 SELECT count(1) FROM posts p <include refid="query_condition" />
+	</select>
+
+	<!-- 插入 （匹配有值的字段）-->
+	<insert id="insert" parameterType="org.example.pingpong_bbsdemo.entity.po.Posts">
+		<selectKey keyProperty="bean.postId" resultType="Integer" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+		 INSERT INTO posts
+		 <trim prefix="(" suffix=")" suffixOverrides="," >
+			<if test="bean.userId != null">
+				 user_id,
+			</if>
+			<if test="bean.forumId != null">
+				 forum_id,
+			</if>
+			<if test="bean.title != null">
+				 title,
+			</if>
+			<if test="bean.content != null">
+				 content,
+			</if>
+			<if test="bean.isEssence != null">
+				 is_essence,
+			</if>
+			<if test="bean.isSticky != null">
+				 is_sticky,
+			</if>
+			<if test="bean.createdAt != null">
+				 created_at,
+			</if>
+			<if test="bean.updatedAt != null">
+				 updated_at,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides="," >
+			<if test="bean.userId!=null">
+				 #{bean.userId},
+			</if>
+			<if test="bean.forumId!=null">
+				 #{bean.forumId},
+			</if>
+			<if test="bean.title!=null">
+				 #{bean.title},
+			</if>
+			<if test="bean.content!=null">
+				 #{bean.content},
+			</if>
+			<if test="bean.isEssence!=null">
+				 #{bean.isEssence},
+			</if>
+			<if test="bean.isSticky!=null">
+				 #{bean.isSticky},
+			</if>
+			<if test="bean.createdAt!=null">
+				 #{bean.createdAt},
+			</if>
+			<if test="bean.updatedAt!=null">
+				 #{bean.updatedAt},
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 插入或者更新 （匹配有值的字段）-->
+	<insert id="insertOrUpdate" parameterType="org.example.pingpong_bbsdemo.entity.po.Posts">
+		 INSERT INTO posts
+		 <trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="bean.postId != null">
+				 post_id,
+			</if>
+			<if test="bean.userId != null">
+				 user_id,
+			</if>
+			<if test="bean.forumId != null">
+				 forum_id,
+			</if>
+			<if test="bean.title != null">
+				 title,
+			</if>
+			<if test="bean.content != null">
+				 content,
+			</if>
+			<if test="bean.isEssence != null">
+				 is_essence,
+			</if>
+			<if test="bean.isSticky != null">
+				 is_sticky,
+			</if>
+			<if test="bean.createdAt != null">
+				 created_at,
+			</if>
+			<if test="bean.updatedAt != null">
+				 updated_at,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="bean.postId!=null">
+				 #{bean.postId},
+			</if>
+			<if test="bean.userId!=null">
+				 #{bean.userId},
+			</if>
+			<if test="bean.forumId!=null">
+				 #{bean.forumId},
+			</if>
+			<if test="bean.title!=null">
+				 #{bean.title},
+			</if>
+			<if test="bean.content!=null">
+				 #{bean.content},
+			</if>
+			<if test="bean.isEssence!=null">
+				 #{bean.isEssence},
+			</if>
+			<if test="bean.isSticky!=null">
+				 #{bean.isSticky},
+			</if>
+			<if test="bean.createdAt!=null">
+				 #{bean.createdAt},
+			</if>
+			<if test="bean.updatedAt!=null">
+				 #{bean.updatedAt},
+			</if>
+		 </trim>
+		 on DUPLICATE key update 
+		 <trim prefix="" suffix="" suffixOverrides=",">
+			<if test="bean.userId!=null">
+				 user_id = VALUES(user_id),
+			</if>
+			<if test="bean.forumId!=null">
+				 forum_id = VALUES(forum_id),
+			</if>
+			<if test="bean.title!=null">
+				 title = VALUES(title),
+			</if>
+			<if test="bean.content!=null">
+				 content = VALUES(content),
+			</if>
+			<if test="bean.isEssence!=null">
+				 is_essence = VALUES(is_essence),
+			</if>
+			<if test="bean.isSticky!=null">
+				 is_sticky = VALUES(is_sticky),
+			</if>
+			<if test="bean.createdAt!=null">
+				 created_at = VALUES(created_at),
+			</if>
+			<if test="bean.updatedAt!=null">
+				 updated_at = VALUES(updated_at),
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 添加 （批量插入）-->
+	<insert id="insertBatch" parameterType="org.example.pingpong_bbsdemo.entity.po.Posts" useGeneratedKeys="true" keyProperty="postId">
+		 INSERT INTO posts(
+			 user_id,
+			 forum_id,
+			 title,
+			 content,
+			 is_essence,
+			 is_sticky,
+			 created_at,
+			 updated_at
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.userId},
+				 #{item.forumId},
+				 #{item.title},
+				 #{item.content},
+				 #{item.isEssence},
+				 #{item.isSticky},
+				 #{item.createdAt},
+				 #{item.updatedAt}
+			 )
+		 </foreach>
+	</insert>
+
+	<!-- 批量新增修改 （批量插入）-->
+	<insert id="insertOrUpdateBatch" parameterType="org.example.pingpong_bbsdemo.entity.po.Posts">
+		 INSERT INTO posts(
+			 user_id,
+			 forum_id,
+			 title,
+			 content,
+			 is_essence,
+			 is_sticky,
+			 created_at,
+			 updated_at
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.userId},
+				 #{item.forumId},
+				 #{item.title},
+				 #{item.content},
+				 #{item.isEssence},
+				 #{item.isSticky},
+				 #{item.createdAt},
+				 #{item.updatedAt}
+			 )
+		 </foreach>
+			on DUPLICATE key update 
+			user_id = VALUES(user_id),
+			forum_id = VALUES(forum_id),
+			title = VALUES(title),
+			content = VALUES(content),
+			is_essence = VALUES(is_essence),
+			is_sticky = VALUES(is_sticky),
+			created_at = VALUES(created_at),
+			updated_at = VALUES(updated_at)
+	</insert>
+
+	<!--多条件修改-->
+	<update id="updateByParam" parameterType="org.example.pingpong_bbsdemo.entity.query.PostsQuery">
+		 UPDATE posts p
+ 		 <set> 
+			<if test="bean.userId != null">
+				 user_id = #{bean.userId},
+			</if>
+			<if test="bean.forumId != null">
+				 forum_id = #{bean.forumId},
+			</if>
+			<if test="bean.title != null">
+				 title = #{bean.title},
+			</if>
+			<if test="bean.content != null">
+				 content = #{bean.content},
+			</if>
+			<if test="bean.isEssence != null">
+				 is_essence = #{bean.isEssence},
+			</if>
+			<if test="bean.isSticky != null">
+				 is_sticky = #{bean.isSticky},
+			</if>
+			<if test="bean.createdAt != null">
+				 created_at = #{bean.createdAt},
+			</if>
+			<if test="bean.updatedAt != null">
+				 updated_at = #{bean.updatedAt},
+			</if>
+ 		 </set>
+ 		 <include refid="query_condition" />
+	</update>
+
+	<!--多条件删除-->
+	<delete id="deleteByParam">
+		 delete p from posts p
+ 		 <include refid="query_condition" />
+	</delete>
+
+	<!-- 根据PostId修改-->
+	<update id="updateByPostId" parameterType="org.example.pingpong_bbsdemo.entity.po.Posts">
+		 UPDATE posts
+ 		 <set> 
+			<if test="bean.userId != null">
+				 user_id = #{bean.userId},
+			</if>
+			<if test="bean.forumId != null">
+				 forum_id = #{bean.forumId},
+			</if>
+			<if test="bean.title != null">
+				 title = #{bean.title},
+			</if>
+			<if test="bean.content != null">
+				 content = #{bean.content},
+			</if>
+			<if test="bean.isEssence != null">
+				 is_essence = #{bean.isEssence},
+			</if>
+			<if test="bean.isSticky != null">
+				 is_sticky = #{bean.isSticky},
+			</if>
+			<if test="bean.createdAt != null">
+				 created_at = #{bean.createdAt},
+			</if>
+			<if test="bean.updatedAt != null">
+				 updated_at = #{bean.updatedAt},
+			</if>
+ 		 </set>
+ 		 where post_id=#{postId}
+	</update>
+
+	<!-- 根据PostId删除-->
+	<delete id="deleteByPostId">
+		delete from posts where post_id=#{postId}
+	</delete>
+
+	<!-- 根据PrimaryKey获取对象-->
+	<select id="selectByPostId" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from posts p where post_id=#{postId}
+	</select>
+
+</mapper>

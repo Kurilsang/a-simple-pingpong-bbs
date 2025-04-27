@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.pingpong_bbsdemo.mappers.CommentsMapper">
+
+	<!--实体映射-->
+	<resultMap id="base_result_map" type="org.example.pingpong_bbsdemo.entity.po.Comments">
+		<!--评论ID，唯一标识评论-->
+		<id column="comment_id" property="commentId"  />
+		<!--所属帖子ID，关联posts表的post_id-->
+		<result column="post_id" property="postId"  />
+		<!--评论用户ID，关联users表的user_id-->
+		<result column="user_id" property="userId"  />
+		<!--父评论ID，用于回复评论，关联comments表的comment_id-->
+		<result column="parent_comment_id" property="parentCommentId"  />
+		<!--评论内容-->
+		<result column="content" property="content"  />
+		<!--评论创建时间-->
+		<result column="created_at" property="createdAt"  />
+	</resultMap>
+
+
+	<!-- 通用查询结果列-->
+	<sql id="base_column_list">
+		 c.comment_id,c.post_id,c.user_id,c.parent_comment_id,c.content,
+		 c.created_at
+	</sql>
+
+	<sql id="base_condition_filed">
+			<if test="query.commentId != null">
+				 and  c.comment_id = #{query.commentId}
+			</if>
+			<if test="query.postId != null">
+				 and  c.post_id = #{query.postId}
+			</if>
+			<if test="query.userId != null">
+				 and  c.user_id = #{query.userId}
+			</if>
+			<if test="query.parentCommentId != null">
+				 and  c.parent_comment_id = #{query.parentCommentId}
+			</if>
+			<if test="query.content != null and query.content!=''">
+				 and  c.content = #{query.content}
+			</if>
+			<if test="query.createdAt != null and query.createdAt!=''">
+				 <![CDATA[ and  c.created_at=str_to_date(#{query.createdAt}, '%Y-%m-%d') ]]>
+			</if>
+	</sql>
+	<!-- 通用条件列-->
+	<sql id="base_condition">
+	 <where>
+		 <include refid="base_condition_filed" />
+	 </where>
+	</sql>
+
+	<!-- 通用查询条件列-->
+	<sql id="query_condition">
+	 <where>
+			<include refid="base_condition_filed" />
+			<if test="query.contentFuzzy!= null  and query.contentFuzzy!=''">
+				 and  c.content like concat('%', #{query.contentFuzzy}, '%')
+			</if>
+			<if test="query.createdAtStart!= null and query.createdAtStart!=''">
+				 <![CDATA[ and  c.created_at>=str_to_date(#{query.createdAtStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.createdAtEnd!= null and query.createdAtEnd!=''">
+				 <![CDATA[ and  c.created_at< date_sub(str_to_date(#{query.createdAtEnd},'%Y-%m-%d'),interval -1 day) ]]>
+			</if>
+	 </where>
+	</sql>
+
+	<!-- 查询集合-->
+	<select id="selectList" resultMap="base_result_map" >
+		 SELECT <include refid="base_column_list" /> FROM comments c <include refid="query_condition" />
+		 <if test="query.orderBy!=null">
+			 order by ${query.orderBy}
+		 </if>
+		 <if test="query.simplePage!=null">
+			 limit #{query.simplePage.start},#{query.simplePage.end}
+		 </if>
+	</select>
+
+	<!-- 查询数量-->
+	<select id="selectCount" resultType="java.lang.Integer" >
+		 SELECT count(1) FROM comments c <include refid="query_condition" />
+	</select>
+
+	<!-- 插入 （匹配有值的字段）-->
+	<insert id="insert" parameterType="org.example.pingpong_bbsdemo.entity.po.Comments">
+		<selectKey keyProperty="bean.commentId" resultType="Integer" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+		 INSERT INTO comments
+		 <trim prefix="(" suffix=")" suffixOverrides="," >
+			<if test="bean.postId != null">
+				 post_id,
+			</if>
+			<if test="bean.userId != null">
+				 user_id,
+			</if>
+			<if test="bean.parentCommentId != null">
+				 parent_comment_id,
+			</if>
+			<if test="bean.content != null">
+				 content,
+			</if>
+			<if test="bean.createdAt != null">
+				 created_at,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides="," >
+			<if test="bean.postId!=null">
+				 #{bean.postId},
+			</if>
+			<if test="bean.userId!=null">
+				 #{bean.userId},
+			</if>
+			<if test="bean.parentCommentId!=null">
+				 #{bean.parentCommentId},
+			</if>
+			<if test="bean.content!=null">
+				 #{bean.content},
+			</if>
+			<if test="bean.createdAt!=null">
+				 #{bean.createdAt},
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 插入或者更新 （匹配有值的字段）-->
+	<insert id="insertOrUpdate" parameterType="org.example.pingpong_bbsdemo.entity.po.Comments">
+		 INSERT INTO comments
+		 <trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="bean.commentId != null">
+				 comment_id,
+			</if>
+			<if test="bean.postId != null">
+				 post_id,
+			</if>
+			<if test="bean.userId != null">
+				 user_id,
+			</if>
+			<if test="bean.parentCommentId != null">
+				 parent_comment_id,
+			</if>
+			<if test="bean.content != null">
+				 content,
+			</if>
+			<if test="bean.createdAt != null">
+				 created_at,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="bean.commentId!=null">
+				 #{bean.commentId},
+			</if>
+			<if test="bean.postId!=null">
+				 #{bean.postId},
+			</if>
+			<if test="bean.userId!=null">
+				 #{bean.userId},
+			</if>
+			<if test="bean.parentCommentId!=null">
+				 #{bean.parentCommentId},
+			</if>
+			<if test="bean.content!=null">
+				 #{bean.content},
+			</if>
+			<if test="bean.createdAt!=null">
+				 #{bean.createdAt},
+			</if>
+		 </trim>
+		 on DUPLICATE key update 
+		 <trim prefix="" suffix="" suffixOverrides=",">
+			<if test="bean.postId!=null">
+				 post_id = VALUES(post_id),
+			</if>
+			<if test="bean.userId!=null">
+				 user_id = VALUES(user_id),
+			</if>
+			<if test="bean.parentCommentId!=null">
+				 parent_comment_id = VALUES(parent_comment_id),
+			</if>
+			<if test="bean.content!=null">
+				 content = VALUES(content),
+			</if>
+			<if test="bean.createdAt!=null">
+				 created_at = VALUES(created_at),
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 添加 （批量插入）-->
+	<insert id="insertBatch" parameterType="org.example.pingpong_bbsdemo.entity.po.Comments" useGeneratedKeys="true" keyProperty="commentId">
+		 INSERT INTO comments(
+			 post_id,
+			 user_id,
+			 parent_comment_id,
+			 content,
+			 created_at
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.postId},
+				 #{item.userId},
+				 #{item.parentCommentId},
+				 #{item.content},
+				 #{item.createdAt}
+			 )
+		 </foreach>
+	</insert>
+
+	<!-- 批量新增修改 （批量插入）-->
+	<insert id="insertOrUpdateBatch" parameterType="org.example.pingpong_bbsdemo.entity.po.Comments">
+		 INSERT INTO comments(
+			 post_id,
+			 user_id,
+			 parent_comment_id,
+			 content,
+			 created_at
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.postId},
+				 #{item.userId},
+				 #{item.parentCommentId},
+				 #{item.content},
+				 #{item.createdAt}
+			 )
+		 </foreach>
+			on DUPLICATE key update 
+			post_id = VALUES(post_id),
+			user_id = VALUES(user_id),
+			parent_comment_id = VALUES(parent_comment_id),
+			content = VALUES(content),
+			created_at = VALUES(created_at)
+	</insert>
+
+	<!--多条件修改-->
+	<update id="updateByParam" parameterType="org.example.pingpong_bbsdemo.entity.query.CommentsQuery">
+		 UPDATE comments c
+ 		 <set> 
+			<if test="bean.postId != null">
+				 post_id = #{bean.postId},
+			</if>
+			<if test="bean.userId != null">
+				 user_id = #{bean.userId},
+			</if>
+			<if test="bean.parentCommentId != null">
+				 parent_comment_id = #{bean.parentCommentId},
+			</if>
+			<if test="bean.content != null">
+				 content = #{bean.content},
+			</if>
+			<if test="bean.createdAt != null">
+				 created_at = #{bean.createdAt},
+			</if>
+ 		 </set>
+ 		 <include refid="query_condition" />
+	</update>
+
+	<!--多条件删除-->
+	<delete id="deleteByParam">
+		 delete c from comments c
+ 		 <include refid="query_condition" />
+	</delete>
+
+	<!-- 根据CommentId修改-->
+	<update id="updateByCommentId" parameterType="org.example.pingpong_bbsdemo.entity.po.Comments">
+		 UPDATE comments
+ 		 <set> 
+			<if test="bean.postId != null">
+				 post_id = #{bean.postId},
+			</if>
+			<if test="bean.userId != null">
+				 user_id = #{bean.userId},
+			</if>
+			<if test="bean.parentCommentId != null">
+				 parent_comment_id = #{bean.parentCommentId},
+			</if>
+			<if test="bean.content != null">
+				 content = #{bean.content},
+			</if>
+			<if test="bean.createdAt != null">
+				 created_at = #{bean.createdAt},
+			</if>
+ 		 </set>
+ 		 where comment_id=#{commentId}
+	</update>
+
+	<!-- 根据CommentId删除-->
+	<delete id="deleteByCommentId">
+		delete from comments where comment_id=#{commentId}
+	</delete>
+
+	<!-- 根据PrimaryKey获取对象-->
+	<select id="selectByCommentId" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from comments c where comment_id=#{commentId}
+	</select>
+
+</mapper>

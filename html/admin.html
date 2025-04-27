@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>乒乓球论坛 - 管理员后台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 自定义样式 */
+       .admin-container {
+            min-height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+       .sidebar {
+            width: 240px;
+            background: #1a202c;
+            color: white;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            padding: 2rem 1rem;
+            box-shadow: 0 0 16px rgba(0, 0, 0, 0.1);
+        }
+
+       .nav-item {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+       .nav-item.active {
+            background: #4299e1;
+            color: white;
+        }
+
+       .nav-item:hover {
+            background: rgba(66, 153, 230, 0.1);
+        }
+
+       .content-area {
+            flex: 1;
+            padding: 2rem;
+            margin-left: 240px;
+            min-width: 0;
+        }
+
+       .module {
+            display: none;
+        }
+
+       .module.active {
+            display: block;
+        }
+
+       .card {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        /* 表格样式 */
+       .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+       .table th,
+       .table td {
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+       .table th {
+            background: #f5f7fa;
+            font-weight: 600;
+        }
+
+       .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="admin-container">
+        <!-- 左侧导航栏 -->
+        <div class="sidebar">
+            <h2 class="text-2xl font-bold mb-4">管理员后台</h2>
+            <div class="nav-item active" data-module="user-management">用户管理</div>
+            <div class="nav-item" data-module="announcement-management">公告管理</div>
+            <div class="nav-item" data-module="post-management">帖子管理</div>
+            <div class="nav-item" data-module="comment-management">评论管理</div>
+        </div>
+        <!-- 内容区域 -->
+        <div class="content-area">
+            <!-- 用户管理模块 -->
+            <div class="module active" id="user-management">
+                <div class="card">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-bold">用户管理</h2>
+                        <button class="bg-green-500 text-white px-4 py-2 rounded" onclick="newUser()">新建</button>
+                    </div>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>用户 ID</th>
+                                <th>用户名</th>
+                                <th>邮箱</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>user1</td>
+                                <td>user1@example.com</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="bg-yellow-500 text-white px-4 py-2 rounded" onclick="editUser(1)">编辑</button>
+                                        <button class="bg-red-500 text-white px-4 py-2 rounded" onclick="deleteUser(1)">删除</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>user2</td>
+                                <td>user2@example.com</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="bg-yellow-500 text-white px-4 py-2 rounded" onclick="editUser(2)">编辑</button>
+                                        <button class="bg-red-500 text-white px-4 py-2 rounded" onclick="deleteUser(2)">删除</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- 公告管理模块 -->
+            <div class="module" id="announcement-management">
+                <div class="card">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-bold">公告管理</h2>
+                        <button class="bg-green-500 text-white px-4 py-2 rounded" onclick="newAnnouncement()">新建</button>
+                    </div>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>公告 ID</th>
+                                <th>标题</th>
+                                <th>发布时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>新活动公告</td>
+                                <td>2025-04-27 10:00</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="bg-yellow-500 text-white px-4 py-2 rounded" onclick="editAnnouncement(1)">编辑</button>
+                                        <button class="bg-red-500 text-white px-4 py-2 rounded" onclick="deleteAnnouncement(1)">删除</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>系统维护通知</td>
+                                <td>2025-04-26 15:30</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="bg-yellow-500 text-white px-4 py-2 rounded" onclick="editAnnouncement(2)">编辑</button>
+                                        <button class="bg-red-500 text-white px-4 py-2 rounded" onclick="deleteAnnouncement(2)">删除</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- 帖子管理模块 -->
+            <div class="module" id="post-management">
+                <div class="card">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-bold">帖子管理</h2>
+                        <button class="bg-green-500 text-white px-4 py-2 rounded" onclick="newPost()">新建</button>
+                    </div>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>帖子 ID</th>
+                                <th>标题</th>
+                                <th>作者</th>
+                                <th>发布时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>乒乓球技巧分享</td>
+                                <td>user1</td>
+                                <td>2025-04-27 11:30</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="bg-yellow-500 text-white px-4 py-2 rounded" onclick="editPost(1)">编辑</button>
+                                        <button class="bg-red-500 text-white px-4 py-2 rounded" onclick="deletePost(1)">删除</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>赛事回顾</td>
+                                <td>user2</td>
+                                <td>2025-04-26 14:15</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="bg-yellow-500 text-white px-4 py-2 rounded" onclick="editPost(2)">编辑</button>
+                                        <button class="bg-red-500 text-white px-4 py-2 rounded" onclick="deletePost(2)">删除</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- 评论管理模块 -->
+            <div class="module" id="comment-management">
+                <div class="card">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-bold">评论管理</h2>
+                        <button class="bg-green-500 text-white px-4 py-2 rounded" onclick="newComment()">新建</button>
+                    </div>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>评论 ID</th>
+                                <th>评论内容</th>
+                                <th>作者</th>
+                                <th>发布时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>很有用的技巧，感谢分享！</td>
+                                <td>user3</td>
+                                <td>2025-04-27 12:00</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="bg-yellow-500 text-white px-4 py-2 rounded" onclick="editComment(1)">编辑</button>
+                                        <button class="bg-red-500 text-white px-4 py-2 rounded" onclick="deleteComment(1)">删除</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>期待更多赛事资讯！</td>
+                                <td>user4</td>
+                                <td>2025-04-26 16:45</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="bg-yellow-500 text-white px-4 py-2 rounded" onclick="editComment(2)">编辑</button>
+                                        <button class="bg-red-500 text-white px-4 py-2 rounded" onclick="deleteComment(2)">删除</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const navItems = document.querySelectorAll('.nav-item');
+        const modules = document.querySelectorAll('.module');
+
+        navItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const targetModuleId = item.dataset.module;
+
+                // 移除所有导航项的 active 类
+                navItems.forEach(navItem => {
+                    navItem.classList.remove('active');
+                });
+                // 给当前点击的导航项添加 active 类
+                item.classList.add('active');
+
+                // 隐藏所有模块
+                modules.forEach(module => {
+                    module.classList.remove('active');
+                });
+                // 显示目标模块
+                const targetModule = document.getElementById(targetModuleId);
+                targetModule.classList.add('active');
+            });
+        });
+
+        function newUser() {
+            alert('新建用户功能待实现');
+        }
+
+        function editUser(id) {
+            alert(`编辑用户 ${id} 功能待实现`);
+        }
+
+        function deleteUser(id) {
+            alert(`删除用户 ${id} 功能待实现`);
+        }
+
+        function newAnnouncement() {
+            alert('新建公告功能待实现');
+        }
+
+        function editAnnouncement(id) {
+            alert(`编辑公告 ${id} 功能待实现`);
+        }
+
+        function deleteAnnouncement(id) {
+            alert(`删除公告 ${id} 功能待实现`);
+        }
+
+        function newPost() {
+            alert('新建帖子功能待实现');
+        }
+
+        function editPost(id) {
+            alert(`编辑帖子 ${id} 功能待实现`);
+        }
+
+        function deletePost(id) {
+            alert(`删除帖子 ${id} 功能待实现`);
+        }
+
+        function newComment() {
+            alert('新建评论功能待实现');
+        }
+
+        function editComment(id) {
+            alert(`编辑评论 ${id} 功能待实现`);
+        }
+
+        function deleteComment(id) {
+            alert(`删除评论 ${id} 功能待实现`);
+        }
+    </script>
+</body>
+
+</html>
+    
