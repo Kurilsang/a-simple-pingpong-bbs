@@ -37,6 +37,8 @@ public class ForumsQuery extends BaseParam {
 
 	private String createdAtEnd;
 
+	private String updatedAt;
+
 
 	public void setForumId(Integer forumId){
 		this.forumId = forumId;
@@ -101,4 +103,11 @@ public class ForumsQuery extends BaseParam {
 		return this.createdAtEnd;
 	}
 
+    public String getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(String updatedAt) {
+        this.updatedAt = updatedAt;
+    }
 }

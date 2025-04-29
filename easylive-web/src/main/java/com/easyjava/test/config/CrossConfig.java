@@ -16,9 +16,10 @@ public class CrossConfig implements WebMvcConfigurer {
         registry.addMapping("/**")
                 .allowedOriginPatterns("*")
                 .allowedMethods("GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS")
-                .allowCredentials(true)
+
                 .maxAge(3600)
-                .allowedHeaders("*");
+                .allowedHeaders("*");// Spring Boot示例：显式允许token头
+//                .allowedHeaders("token", "Content-Type", "Authorization");
     }
 
 }

@@ -116,6 +116,8 @@ public class UserInfoQuery extends BaseParam {
 	private Integer theme;
 
 
+	private String avatar;
+
 	public void setUserId(String userId){
 		this.userId = userId;
 	}
@@ -346,4 +348,11 @@ public class UserInfoQuery extends BaseParam {
 		return this.theme;
 	}
 
+    public String getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
+    }
 }

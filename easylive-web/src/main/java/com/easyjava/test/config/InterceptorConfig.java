@@ -13,7 +13,7 @@ public class InterceptorConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
 //        注意这里不能包含application.yaml内的prefix
         registry.addInterceptor(loginCheckInterceptor)
-                .addPathPatterns("/**")  // 仅拦截登录接口
+                .addPathPatterns("/posts/add","/comments/add")  // 游客拦截
                 .excludePathPatterns("/account/login**","/account/*"); // 排除验证码接口
     }
 }

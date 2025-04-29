@@ -73,13 +73,13 @@ public class PostsController extends ABaseController{
 	 * 根据PostId修改对象
 	 */
 	@RequestMapping("/updatePostsByPostId")
-	public ResponseVO updatePostsByPostId(Posts bean,Integer postId) {
+	public ResponseVO updatePostsByPostId(@RequestBody Posts bean,Integer postId) {
 		postsService.updatePostsByPostId(bean,postId);
 		return getSuccessResponseVO(null);
 	}
 
 	/**
-	 * 根据PostId删除
+	 * 根据PostId删除并删除对应的comments
 	 */
 	@RequestMapping("/deletePostsByPostId")
 	public ResponseVO deletePostsByPostId(Integer postId) {

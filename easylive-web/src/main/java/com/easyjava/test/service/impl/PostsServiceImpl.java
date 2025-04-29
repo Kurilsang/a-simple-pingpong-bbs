@@ -5,6 +5,9 @@ import java.util.List;
 
 import javax.annotation.Resource;
 
+import com.easyjava.test.entity.query.CommentsQuery;
+import com.easyjava.test.mappers.CommentsMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.easyjava.test.entity.enums.PageSize;
@@ -15,6 +18,7 @@ import com.easyjava.test.entity.query.SimplePage;
 import com.easyjava.test.mappers.PostsMapper;
 import com.easyjava.test.service.PostsService;
 import com.easyjava.test.utils.StringTools;
+import org.springframework.transaction.annotation.Transactional;
 
 
 /**
@@ -25,6 +29,8 @@ public class PostsServiceImpl implements PostsService {
 
 	@Resource
 	private PostsMapper<Posts, PostsQuery> postsMapper;
+    @Autowired
+    private CommentsMapper commentsMapper;
 
 	/**
 	 * 根据条件查询列表
@@ -127,7 +133,11 @@ public class PostsServiceImpl implements PostsService {
 	 * 根据PostId删除
 	 */
 	@Override
+	@Transactional
 	public Integer deletePostsByPostId(Integer postId) {
+		CommentsQuery commentsQuery = new CommentsQuery();
+		commentsQuery.setPostId(postId);
+		commentsMapper.deleteByParam(commentsQuery);
 		return this.postsMapper.deleteByPostId(postId);
 	}
 }

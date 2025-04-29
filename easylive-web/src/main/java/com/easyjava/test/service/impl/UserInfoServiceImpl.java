@@ -221,9 +221,12 @@ public class UserInfoServiceImpl implements UserInfoService {
 	@Override
 	public TokenUserInfoDto login(String email, String password, String ip) {
 		UserInfo userInfo = userInfoMapper.selectByEmail(email);
+		System.out.println("这是标记"+StringTools.encodeByMd5(password)+"为输入"+userInfo.getPassword());
 		if(null == userInfo||(!userInfo.getPassword().equals(StringTools.encodeByMd5(password)))) {
 			throw new BusinessException("账号或密码错误");
 		}
+
+
 		if(userInfo.getStatus()==UserStatusEnum.DISABLED.getStatus()) {
 			throw new BusinessException("账号已被禁用");
 		}
@@ -248,4 +251,37 @@ public class UserInfoServiceImpl implements UserInfoService {
 			return LoginedEnum.NOTLOGIN.getIsLogined();
 		}
 	}
+
+	@Override
+	public void adminAdd(UserInfo userInfo) {
+		UserInfo u = userInfoMapper.selectByEmail(userInfo.getEmail());
+		if(null != u) {throw new BusinessException("邮箱已存在");
+		}
+		u = userInfoMapper.selectByNickName(userInfo.getNickName());
+		if(null!=u)
+		{
+			throw new BusinessException("昵称已存在");
+		}
+		String userId = StringTools.getRandomNumber(Constants.LENGTH_10);
+		userInfo.setUserId(userId);
+		String passwordMd5 = StringTools.encodeByMd5(userInfo.getPassword());
+		userInfo.setPassword(passwordMd5);
+		userInfo.setJoinTime(new Date());
+		userInfo.setStatus(UserStatusEnum.ENABLE.getStatus());
+		userInfo.setSex(UserSexEnum.SECREACY.getType());
+		userInfo.setTheme(Constants.ONE);
+
+		userInfo.setCurrentCoinCount(10);
+		userInfo.setTotalCoinCount(10);
+		userInfoMapper.insert(userInfo);
+	}
+
+	@Override
+	public void adminUpdate(UserInfo userInfo, String userId) {
+//		userInfo.setPassword(StringTools.encodeByMd5(StringTools.encodeByMd5(userInfo.getPassword())));
+		String passwordMd5 = StringTools.encodeByMd5(userInfo.getPassword());
+		userInfo.setPassword(passwordMd5);
+		userInfoMapper.updateByUserId(userInfo,userId);
+	}
+
 }

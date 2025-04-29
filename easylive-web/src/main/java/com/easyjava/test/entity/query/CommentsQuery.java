@@ -44,7 +44,7 @@ public class CommentsQuery extends BaseParam {
 	private String createdAtStart;
 
 	private String createdAtEnd;
-
+  	private String lastChange;
 
 	public void setCommentId(Integer commentId){
 		this.commentId = commentId;
@@ -117,4 +117,11 @@ public class CommentsQuery extends BaseParam {
 		return this.createdAtEnd;
 	}
 
+    public String getLastChange() {
+        return lastChange;
+    }
+
+    public void setLastChange(String lastChange) {
+        this.lastChange = lastChange;
+    }
 }

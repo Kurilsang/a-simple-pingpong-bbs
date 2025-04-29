@@ -111,4 +111,9 @@ public interface UserInfoService {
 	TokenUserInfoDto login(String email, String password, String ip);
 
 	Integer loginCheck(String token);
+
+	void adminAdd(UserInfo userInfo);
+
+
+	void adminUpdate(UserInfo userInfo, String userId);
 }

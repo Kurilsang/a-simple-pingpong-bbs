@@ -44,3 +44,11 @@ project:
 log:
   root:
     level: debug
+my:
+  minio:
+    access-key: kZpkbiU9X8FLOCI6JyGR
+    secret-key: 75a7bjAiyTb0j6pNDxtw0w9DCrHUnkSpz45mcyzA
+    ip_addr: http://localhost:9000
+    bucketName: public
+    filePath: /
+

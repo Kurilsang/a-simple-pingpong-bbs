@@ -6,6 +6,7 @@ import com.easyjava.test.entity.query.ForumsQuery;
 import com.easyjava.test.entity.po.Forums;
 import com.easyjava.test.entity.vo.ResponseVO;
 import com.easyjava.test.service.ForumsService;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -33,7 +34,7 @@ public class ForumsController extends ABaseController{
 	 * 新增
 	 */
 	@RequestMapping("/add")
-	public ResponseVO add(Forums bean) {
+	public ResponseVO add(@RequestBody Forums bean) {
 		forumsService.add(bean);
 		return getSuccessResponseVO(null);
 	}
@@ -67,8 +68,8 @@ public class ForumsController extends ABaseController{
 	/**
 	 * 根据ForumId修改对象
 	 */
-	@RequestMapping("/updateForumsByForumId")
-	public ResponseVO updateForumsByForumId(Forums bean,Integer forumId) {
+	@RequestMapping("/updateForumsByForumId/{forumId}")
+	public ResponseVO updateForumsByForumId(@RequestBody Forums bean,@PathVariable Integer forumId) {
 		forumsService.updateForumsByForumId(bean,forumId);
 		return getSuccessResponseVO(null);
 	}

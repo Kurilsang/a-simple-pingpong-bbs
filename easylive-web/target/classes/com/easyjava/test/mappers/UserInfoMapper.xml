@@ -37,6 +37,8 @@
 		<result column="current_coin_count" property="currentCoinCount"  />
 		<!--主题-->
 		<result column="theme" property="theme"  />
+<!--		头像url-->
+		<result column="avatar" property="avatar"  />
 	</resultMap>
 
 
@@ -45,7 +47,7 @@
 		 u.user_id,u.nick_name,u.email,u.password,u.sex,
 		 u.birthday,u.school,u.person_introduction,u.join_time,u.last_login_time,
 		 u.last_login_ip,u.status,u.notice_info,u.total_coin_count,u.current_coin_count,
-		 u.theme
+		 u.theme,u.avatar
 	</sql>
 
 	<sql id="base_condition_filed">
@@ -96,6 +98,9 @@
 			</if>
 			<if test="query.theme != null">
 				 and  u.theme = #{query.theme}
+			</if>
+			<if test="query.avatar != null">
+				and  u.avatar = #{query.avatar}
 			</if>
 	</sql>
 	<!-- 通用条件列-->
@@ -324,6 +329,9 @@
 			<if test="bean.theme != null">
 				 theme,
 			</if>
+			 <if test="bean.avatar != null">
+				 avatar,
+			 </if>
 		 </trim>
 		 <trim prefix="values (" suffix=")" suffixOverrides=",">
 			<if test="bean.userId!=null">
@@ -374,6 +382,9 @@
 			<if test="bean.theme!=null">
 				 #{bean.theme},
 			</if>
+			 <if test="bean.avatar!=null">
+				 #{bean.avatar},
+			 </if>
 		 </trim>
 		 on DUPLICATE key update 
 		 <trim prefix="" suffix="" suffixOverrides=",">
@@ -425,6 +436,9 @@
 			<if test="bean.theme!=null">
 				 theme = VALUES(theme),
 			</if>
+			 <if test="bean.avatar!=null">
+				 avatar = VALUES(avatar),
+			 </if>
 		 </trim>
 	</insert>
 
@@ -640,6 +654,9 @@
 			<if test="bean.theme != null">
 				 theme = #{bean.theme},
 			</if>
+			 <if test="bean.avatar != null">
+				 avatar = #{bean.avatar},
+			 </if>
  		 </set>
  		 where user_id=#{userId}
 	</update>

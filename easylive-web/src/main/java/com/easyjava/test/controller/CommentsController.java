@@ -6,6 +6,7 @@ import com.easyjava.test.entity.query.CommentsQuery;
 import com.easyjava.test.entity.po.Comments;
 import com.easyjava.test.entity.vo.ResponseVO;
 import com.easyjava.test.service.CommentsService;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -37,14 +38,7 @@ public class CommentsController extends ABaseController{
 	 * 新增
 	 */
 		@RequestMapping("/add")
-	public ResponseVO add(Comments bean) {
-			System.out.println(bean.toString());
-			System.out.println(bean.toString());
-			System.out.println(bean.toString());
-			System.out.println(bean.toString());
-			System.out.println(bean.toString());
-			System.out.println(bean.toString());
-			System.out.println(bean.toString());
+	public ResponseVO add(@RequestBody Comments bean) {
 		commentsService.add(bean);
 		return getSuccessResponseVO(null);
 	}
@@ -78,8 +72,9 @@ public class CommentsController extends ABaseController{
 	/**
 	 * 根据CommentId修改对象
 	 */
-	@RequestMapping("/updateCommentsByCommentId")
-	public ResponseVO updateCommentsByCommentId(Comments bean,Integer commentId) {
+	@RequestMapping("/updateCommentsByCommentId/{commentId}")
+	public ResponseVO updateCommentsByCommentId(@RequestBody Comments bean,
+												@PathVariable Integer commentId) {
 		commentsService.updateCommentsByCommentId(bean,commentId);
 		return getSuccessResponseVO(null);
 	}

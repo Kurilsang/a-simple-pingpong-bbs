@@ -37,6 +37,9 @@ public class Forums implements Serializable {
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	@DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 	private Date createdAt;
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+	@DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+	private Date updatedAt;
 
 
 	public void setForumId(Integer forumId){
@@ -75,4 +78,12 @@ public class Forums implements Serializable {
 	public String toString (){
 		return "板块ID，唯一标识板块:"+(forumId == null ? "空" : forumId)+"，板块名称，如技术交流、赛事资讯等:"+(forumName == null ? "空" : forumName)+"，板块描述，介绍板块内容:"+(description == null ? "空" : description)+"，板块创建时间:"+(createdAt == null ? "空" : DateUtil.format(createdAt, DateTimePatternEnum.YYYY_MM_DD_HH_MM_SS.getPattern()));
 	}
+
+    public Date getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Date updatedAt) {
+        this.updatedAt = updatedAt;
+    }
 }

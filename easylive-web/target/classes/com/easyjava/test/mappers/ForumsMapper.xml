@@ -13,12 +13,14 @@
 		<result column="description" property="description"  />
 		<!--板块创建时间-->
 		<result column="created_at" property="createdAt"  />
+		<!--板块更新时间-->
+		<result column="updated_at" property="updatedAt"  />
 	</resultMap>
 
 
 	<!-- 通用查询结果列-->
 	<sql id="base_column_list">
-		 f.forum_id,f.forum_name,f.description,f.created_at
+		 f.forum_id,f.forum_name,f.description,f.created_at,f.updated_at
 	</sql>
 
 	<sql id="base_condition_filed">
@@ -33,6 +35,9 @@
 			</if>
 			<if test="query.createdAt != null and query.createdAt!=''">
 				 <![CDATA[ and  f.created_at=str_to_date(#{query.createdAt}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.updatedAt != null and query.updatedAt!=''">
+				<![CDATA[ and  f.updated_at=str_to_date(#{updatedAt}, '%Y-%m-%d') ]]>
 			</if>
 	</sql>
 	<!-- 通用条件列-->

@@ -1,5 +1,6 @@
 package com.easyjava.test.service.impl;
 
+import java.util.Date;
 import java.util.List;
 
 import javax.annotation.Resource;
@@ -31,6 +32,8 @@ public class CommentsServiceImpl implements CommentsService {
 	private CommentsMapper<Comments, CommentsQuery> commentsMapper;
     @Autowired
     private UserInfoMapper userInfoMapper;
+    @Autowired
+    private UserInfoServiceImpl userInfoService;
 
 	/**
 	 * 根据条件查询列表
@@ -64,6 +67,7 @@ public class CommentsServiceImpl implements CommentsService {
 		return result;
 	}
 
+
 	@Override
 	public PaginationResultVO<Comments> findCommentsListByPage(CommentsQuery param) {
 		int count = this.findCountByParam(param);
@@ -77,6 +81,7 @@ public class CommentsServiceImpl implements CommentsService {
 			String userId = commentDto.getUserId();
 			UserInfo userInfo = (UserInfo)userInfoMapper.selectByUserId(userId);
 			commentDto.setNickName(userInfo.getNickName());
+			commentDto.setAvatar(userInfo.getAvatar());
 		}
 		PaginationResultVO<Comments> result = new PaginationResultVO(count, page.getPageSize(), page.getPageNo(), page.getPageTotal(), commentDtoList);
 		return result;
@@ -143,6 +148,7 @@ public class CommentsServiceImpl implements CommentsService {
 	 */
 	@Override
 	public Integer updateCommentsByCommentId(Comments bean, Integer commentId) {
+		bean.setLastChange(new Date());
 		return this.commentsMapper.updateByCommentId(bean, commentId);
 	}
 
