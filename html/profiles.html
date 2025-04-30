@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <title>乒乓球论坛 - 我的资料</title>
+    <style>
+        /* 自定义过渡动画 */
+       .hover-transition {
+            transition: all 0.3s ease;
+        }
+
+        /* 模态框样式 */
+       .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+       .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 8px;
+        }
+
+       .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+       .close:hover,
+       .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* 资料卡片样式 */
+       .profile-card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 600px;
+        }
+
+       .profile-card img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin-bottom: 10px;
+        }
+
+       .profile-card h2 {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+       .profile-card p {
+            margin-bottom: 10px;
+        }
+
+       .profile-card input,
+       .profile-card textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+       .profile-card button {
+            margin-right: 10px;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: #fff;
+        }
+
+       .profile-card button:hover {
+            background-color: #0056b3;
+        }
+
+       .edit-buttons {
+            display: none;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 font-sans text-gray-700">
+    <!-- 导航栏 -->
+    <nav class="bg-gradient-to-r from-blue-600 to-purple-600 p-4 shadow-md">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="#" class="text-white text-3xl font-extrabold tracking-wide">乒乓球论坛 - 我的资料</a>
+            <a href="index.html" class="text-white hover:text-gray-300 hover-transition">返回首页</a>
+        </div>
+    </nav>
+
+    <!-- 我的资料卡片 -->
+    <div class="profile-card">
+        <img id="userAvatar" src="" alt="用户头像">
+        <!-- 新增文件选择输入和上传按钮 -->
+        <input type="file" id="fileInput" style="display: none;">
+        <button id="uploadButton" style="display: none;">上传头像</button>
+        <h2 id="userNickname">默认昵称</h2>
+        <p><span>用户 ID：</span><span id="userId">12345</span></p>
+        <p><span>性别：</span><span id="userSex">男</span></p>
+        <p><span>创建时间：</span><span id="userCreateTime">2025-01-01</span></p>
+        <p><span>个人简介：</span><span id="userIntroduction">暂无简介</span></p>
+        <button id="editButton" onclick="enterEditMode()">编辑资料</button>
+        <div class="edit-buttons">
+            <button id="saveButton" onclick="saveProfile()">保存</button>
+            <button id="cancelButton" onclick="exitEditMode()">取消</button>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="bg-gray-900 text-white p-6 mt-8">
+        <div class="container mx-auto text-center">
+            <p>&copy; 2025 乒乓球论坛. 保留所有权利.</p>
+        </div>
+    </footer>
+
+    <script>
+        const baseURL = 'http://localhost:7071/web';
+        let isEditMode = false;
+        let originalNickname;
+        let originalSex;
+        let originalIntroduction;
+        let newAvatarUrl = '';
+
+        function getCookie(name) {
+            const cookieArr = document.cookie.split("; ");
+            for (const cookie of cookieArr) {
+                const [key, value] = cookie.split("=");
+                if (key === name) return decodeURIComponent(value);
+            }
+            return null;
+        }
+
+        window.onload = function () {
+            loadProfile();
+        };
+
+        const sexMap = {
+            1: '男',
+            0: '女',
+            2: '保密'
+        };
+
+        async function loadProfile() {
+            const token = getCookie('token');
+            const userId = getCookie('userId');
+            if (token) {
+                try {
+                    const response = await axios.get(`${baseURL}/account/getProfiles/${userId}`, {
+                        headers: {
+                            'token': token
+                        }
+                    });
+                    const profile = response.data.data;
+                    console.log(profile);
+                    document.getElementById('userAvatar').src = profile.avatar || 'https://picsum.photos/100/100';
+                    document.getElementById('userNickname').textContent = profile.nickName || '默认昵称';
+                    document.getElementById('userId').textContent = profile.userId || '12345';
+                    document.getElementById('userSex').textContent = sexMap[profile.sex] || '男';
+                    document.getElementById('userCreateTime').textContent = profile.joinTime || '2025-01-01';
+                    document.getElementById('userIntroduction').textContent = profile.personIntroduction || '暂无简介';
+                } catch (error) {
+                    console.error('加载用户资料失败:', error);
+                }
+            }
+        }
+
+        function enterEditMode() {
+            isEditMode = true;
+            document.getElementById('editButton').style.display = 'none';
+            const editButtons = document.querySelector('.edit-buttons');
+            editButtons.style.display = 'block';
+
+            originalNickname = document.getElementById('userNickname').textContent;
+            originalSex = document.getElementById('userSex').textContent;
+            originalIntroduction = document.getElementById('userIntroduction').textContent;
+
+            document.getElementById('userNickname').outerHTML = `<input type="text" id="userNicknameInput" value="${originalNickname}">`;
+            const sexOptions = '<option value=1>男</option><option value=0>女</option>';
+            document.getElementById('userSex').outerHTML = `<select id="userSexInput">${sexOptions}</select>`;
+            const sexSelect = document.getElementById('userSexInput');
+            for (let i = 0; i < sexSelect.options.length; i++) {
+                if (sexSelect.options[i].value === originalSex) {
+                    sexSelect.selectedIndex = i;
+                    break;
+                }
+            }
+            document.getElementById('userIntroduction').outerHTML = `<textarea id="userIntroductionInput">${originalIntroduction}</textarea>`;
+
+            // 显示上传头像按钮和文件选择输入
+            document.getElementById('fileInput').style.display = 'block';
+            document.getElementById('uploadButton').style.display = 'block';
+
+            // 绑定上传按钮点击事件
+            document.getElementById('uploadButton').addEventListener('click', function () {
+                const fileInput = document.getElementById('fileInput');
+                const file = fileInput.files[0];
+
+                if (file) {
+                    const formData = new FormData();
+                    formData.append('image', file);
+
+                    axios.post(`${baseURL}/account/upload`, formData, {
+                        headers: {
+                            'Content-Type': 'multipart/form-data'
+                        }
+                    })
+                       .then(function (response) {
+                            console.log('文件上传成功', response);
+                            newAvatarUrl = response.data.data;
+                            console.log(newAvatarUrl);
+                            document.getElementById('userAvatar').src = newAvatarUrl;
+                        })
+                       .catch(function (error) {
+                            console.error('文件上传失败', error);
+                        });
+                } else {
+                    alert('请选择一个文件');
+                }
+            });
+        }
+
+        function exitEditMode() {
+            isEditMode = false;
+            document.getElementById('editButton').style.display = 'block';
+            const editButtons = document.querySelector('.edit-buttons');
+            editButtons.style.display = 'none';
+
+            document.getElementById('userNicknameInput').outerHTML = `<h2 id="userNickname">${originalNickname}</h2>`;
+            document.getElementById('userSexInput').outerHTML = `<span id="userSex">${originalSex}</span>`;
+            document.getElementById('userIntroductionInput').outerHTML = `<span id="userIntroduction">${originalIntroduction}</span>`;
+
+            // 隐藏上传头像按钮和文件选择输入
+            document.getElementById('fileInput').style.display = 'none';
+            document.getElementById('uploadButton').style.display = 'none';
+        }
+
+        function saveProfile() {
+            const token = getCookie('token');
+            if (token) {
+                const nickname = document.getElementById('userNicknameInput').value;
+                const sex = document.getElementById('userSexInput').value;
+                const personIntroduction = document.getElementById('userIntroductionInput').value;
+                const userId = getCookie('userId');
+                const avatar = newAvatarUrl || document.getElementById('userAvatar').src;
+
+                try {
+                    axios.post(`${baseURL}/account/updateProfile?nickName=${nickname}&sex=${sex}&personIntroduction=
+                    ${personIntroduction}&userId=${userId}&avatar=${avatar}`)
+                       .then(response => {
+                                if (response.data.code === 200) {
+                                    
+                                    const info = response.data.info;
+                                    alert(`${info}`);
+                                    console.log(response.data);
+                                    loadProfile();
+                                    exitEditMode();
+                                } else {
+                                    alert('资料保存失败: ' + response.data.message);
+                                }
+                            }
+                        );
+                } catch (error) {
+                    console.error('保存用户资料失败:', error);
+                    alert('保存用户资料时出现错误');
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>    
