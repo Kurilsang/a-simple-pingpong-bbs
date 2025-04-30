@@ -1,0 +1,4 @@
+docker run -d -p 9000:9000 -p 9001:9001 --name minio2 -v /mnt/minio/data:/data -v /mnt/minio/config:/root/.minio  -e "MINIO_ACCESS_KEY=minioadmin" -e "MINIO_SECRET_KEY=minioadmin" minio/minio server /data --console-address ":9001" -address ":9000"
+
+
+docker run -p 6379:6379 --name redis6.2.6 -v /data/dockerData/redis/conf/redis.config:/etc/redis/redis.conf -v /data/dockerData/redis/data:/data -v /data/dockerData/redis/logs:/logs -d redis:6.2.6 redis-server /etc/redis/redis.conf
