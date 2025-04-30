@@ -46,8 +46,8 @@ log:
     level: debug
 my:
   minio:
-    access-key: kZpkbiU9X8FLOCI6JyGR
-    secret-key: 75a7bjAiyTb0j6pNDxtw0w9DCrHUnkSpz45mcyzA
+    access-key: LXjrIDgvB3eBuswp3f09
+    secret-key: ilLSAJN2327JGVpgkRJuMfS8cQs3bj2g6wHhEP5m
     ip_addr: http://localhost:9000
     bucketName: public
     filePath: /

@@ -70,7 +70,7 @@ public class AccountController extends ABaseController {
 	@RequestMapping(value = "/register",method = RequestMethod.POST)
 	public ResponseVO register( @NotEmpty @Email @Size(max = 150) String email,
 							    @NotEmpty @Size(max = 20) String nickName,
-							    @NotEmpty @Pattern(regexp = Constants.REGEX_PASSWORD) String registerPassword,
+							    @NotEmpty  String registerPassword,
 							    @NotEmpty String checkCodeKey,
 							    @NotEmpty String checkCode) {
 		try {

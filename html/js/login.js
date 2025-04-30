@@ -20,13 +20,13 @@ function getCookie(name) {
 
 function reloadCaptcha() {
     axios.get('http://localhost:7071/web/account/checkCode')
-       .then(response => {
+        .then(response => {
             const captchaImg = document.getElementById('captchaRegister');
             captchaImg.src = response.data.data.checkCode;
             checkCodeKey = response.data.data.checkCodeKey;
             console.log(checkCodeKey);
         })
-       .catch(error => {
+        .catch(error => {
             console.error('获取注册验证码失败:', error);
         });
 }
@@ -34,13 +34,13 @@ function reloadCaptcha() {
 function openLoginModal() {
     document.getElementById('loginModal').style.display = 'block';
     axios.get('http://localhost:7071/web/account/checkCode')
-       .then(response => {
+        .then(response => {
             const captchaImg = document.getElementById('captchaLogin');
             captchaImg.src = response.data.data.checkCode;
             checkCodeKey = response.data.data.checkCodeKey;
             console.log(checkCodeKey);
         })
-       .catch(error => {
+        .catch(error => {
             console.error('获取登录验证码失败:', error);
         });
 }
@@ -52,13 +52,13 @@ function closeLoginModal() {
 function openRegisterModal() {
     document.getElementById('registerModal').style.display = 'block';
     axios.get('http://localhost:7071/web/account/checkCode')
-       .then(response => {
+        .then(response => {
             const captchaImg = document.getElementById('captchaRegister');
             captchaImg.src = response.data.data.checkCode;
             checkCodeKey = response.data.data.checkCodeKey;
             console.log(checkCodeKey);
         })
-       .catch(error => {
+        .catch(error => {
             console.error('获取注册验证码失败:', error);
         });
 }
@@ -86,12 +86,28 @@ document.getElementById('registerButton').addEventListener('click', async () => 
 
     try {
         axios.post(`${baseURL}/account/register?email=` + email + '&nickName=' + nickName + '&registerPassword=' + registerPassword + '&checkCode=' + checkCode + '&checkCodeKey=' + registerCheckCodeKey)
-           .then(response => {
-                alert('注册成功');
-                autoLogin();
-                closeRegisterModal();
+            .then(response => {
+                console.log(response.data);
+                if (response.data.code === 500) {
+                    alert("请正确输入邮箱（需要确实是邮箱的格式）密码等信息");
+                    axios.get('http://localhost:7071/web/account/checkCode')
+                        .then(response => {
+                            const captchaImg = document.getElementById('captchaRegister');
+                            captchaImg.src = response.data.data.checkCode;
+                            checkCodeKey = response.data.data.checkCodeKey;
+                            console.log(checkCodeKey);
+                        })
+                        .catch(error => {
+                            console.error('获取注册验证码失败:', error);
+                        });
+                }
+                else {
+                    alert(`${response.data.info}`);
+                    autoLogin();
+                    closeRegisterModal();
+                }
             })
-           .catch(error => {
+            .catch(error => {
                 console.error('请求失败:', error);
             });
     } catch (error) {
@@ -108,56 +124,61 @@ document.getElementById('loginButton').addEventListener('click', async () => {
     console.log(email, loginPassword, checkCode, loginCheckCodeKey)
     try {
         axios.post(`${baseURL}/account/login?email=` + email + '&password=' + loginPassword + '&checkCode=' + checkCode + '&checkCodeKey=' + loginCheckCodeKey)
-           .then(response => {
-                const responseInfo = response.data.info;
-                alert(`${responseInfo}`); // 显示登录成功信息
-                if (response.data.info === '图片验证码错误') {
-                    axios.get('http://localhost:7071/web/account/checkCode')
-                       .then(response => {
-                            const captchaImg = document.getElementById('captchaLogin');
-                            captchaImg.src = response.data.data.checkCode;
-                            checkCodeKey = response.data.data.checkCodeKey;
-                            console.log(checkCodeKey);
-                        })
-                       .catch(error => {
-                            console.error('获取登录验证码失败:', error);
-                        });
+            .then(response => {
+                if (response.data.code === 500) {
+                    alert('请正确输入所有信息')
                 }
-                setCookie('token', response.data.data.token, 7);
-                setCookie('userId', response.data.data.userId, 7);
-                setCookie('nickName', response.data.data.nickName, 7);
-                setCookie('sex', response.data.data.sex, 7);
-                setCookie('birthday', response.data.data.birthDay, 7);
-                setCookie('personIntroduction', response.data.data.personIntroduction, 7);
-                setCookie('avatar', response.data.data.avatar, 7);
+                else {
+                    const responseInfo = response.data.info;
+                    alert(`${responseInfo}`); // 显示登录成功信息
+                    if (response.data.info === '图片验证码错误') {
+                        axios.get('http://localhost:7071/web/account/checkCode')
+                            .then(response => {
+                                const captchaImg = document.getElementById('captchaLogin');
+                                captchaImg.src = response.data.data.checkCode;
+                                checkCodeKey = response.data.data.checkCodeKey;
+                                console.log(checkCodeKey);
+                            })
+                            .catch(error => {
+                                console.error('获取登录验证码失败:', error);
+                            });
+                    }
+                    setCookie('token', response.data.data.token, 7);
+                    setCookie('userId', response.data.data.userId, 7);
+                    setCookie('nickName', response.data.data.nickName, 7);
+                    setCookie('sex', response.data.data.sex, 7);
+                    setCookie('birthday', response.data.data.birthDay, 7);
+                    setCookie('personIntroduction', response.data.data.personIntroduction, 7);
+                    setCookie('avatar', response.data.data.avatar, 7);
 
 
-                console.log(getCookie('token'));
-                const avatar = getCookie('avatar');
-                const token = getCookie('token');
-                if (token) {
-                    topLoginBtn.style.display = 'none';
-                    topRegisterBtn.style.display = 'none';
-                    avatarDropdown.style.display = 'block';
-                    userAvatar.src = avatar || 'https://picsum.photos/40/40';
+                    console.log(getCookie('token'));
+                    const avatar = getCookie('avatar');
+                    const token = getCookie('token');
+                    if (token) {
+                        topLoginBtn.style.display = 'none';
+                        topRegisterBtn.style.display = 'none';
+                        avatarDropdown.style.display = 'block';
+                        userAvatar.src = avatar || 'https://picsum.photos/40/40';
+                    }
+                    autoLogin();
+                    closeLoginModal();
                 }
-                autoLogin();
-                closeLoginModal();
             })
-           .catch(error => {
+            .catch(error => {
                 console.log(`${baseURL}/account/account/login?email=` + email + '&password=' + loginPassword + '&checkCode=' + checkCode + '&checkCodeKey=' + loginCheckCodeKey)
                 console.error('请求失败:', error);
             });
     } catch (error) {
         console.error('登录失败:', error);
         axios.get('http://localhost:7071/web/account/checkCode')
-           .then(response => {
+            .then(response => {
                 const captchaImg = document.getElementById('captchaLogin');
                 captchaImg.src = response.data.data.checkCode;
                 checkCodeKey = response.data.data.checkCodeKey;
                 console.log(checkCodeKey);
             })
-           .catch(error => {
+            .catch(error => {
                 console.error('获取注册验证码失败:', error);
             });
     }
@@ -185,7 +206,7 @@ function autoLogin() {
                     document.getElementById('topLoginBtn').style.display = 'none';
                     document.getElementById('topRegisterBtn').style.display = 'none';
 
-                    
+
                 }
             }
         })
