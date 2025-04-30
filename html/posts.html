@@ -26,21 +26,27 @@
         /* 新增帖子列表动画样式 */
         .post-item {
             cursor: pointer;
-            transition: 
-                background-color 0.3s ease, 
-                transform 0.3s ease, 
+            transition:
+                background-color 0.3s ease,
+                transform 0.3s ease,
                 box-shadow 0.3s ease;
         }
 
         .post-item:hover {
-            background-color: #f5f5f5; /* 悬浮背景色 */
-            transform: translateY(-4px); /* 悬浮上移4px */
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* 悬浮阴影 */
+            background-color: #f5f5f5;
+            /* 悬浮背景色 */
+            transform: translateY(-4px);
+            /* 悬浮上移4px */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            /* 悬浮阴影 */
         }
 
-        .post-item:active, .post-item.clicked {
-            background-color: #f0f0f0; /* 点击/激活背景色 */
-            transform: translateY(1px); /* 点击下沉1px */
+        .post-item:active,
+        .post-item.clicked {
+            background-color: #f0f0f0;
+            /* 点击/激活背景色 */
+            transform: translateY(1px);
+            /* 点击下沉1px */
         }
 
         /* 模态框样式 */
@@ -99,6 +105,45 @@
             background-color: #007bff;
             color: #fff;
         }
+
+        /* 头像下拉菜单样式 */
+        .avatar-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .avatar-dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+            right: 0;
+            border-radius: 4px;
+        }
+
+        .avatar-dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .avatar-dropdown-content a:hover {
+            background-color: #f1f1f1;
+        }
+
+        .avatar-dropdown:hover .avatar-dropdown-content {
+            display: block;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
     </style>
 </head>
 
@@ -109,13 +154,20 @@
             <a href="index.html" class="text-white text-3xl font-extrabold tracking-wide">乒乓球论坛</a>
             <div class="flex space-x-6">
                 <a href="/index.html" class="text-white hover:text-gray-300 hover-transition">首页</a>
-                <a href="#" class="text-white hover:text-gray-300 hover-transition">技术交流</a>
-                <a href="#" class="text-white hover:text-gray-300 hover-transition">赛事资讯</a>
-                <a href="#" class="text-white hover:text-gray-300 hover-transition">我的资料</a>
-                <a href="#" onclick="openLoginModal()" id="topLoginBtn"
-                    class="text-white hover:text-gray-300 hover-transition">登录</a>
-                <a href="#" onclick="openRegisterModal()" id="topRegisterBtn"
-                    class="text-white hover:text-gray-300 hover-transition">注册</a>
+                <a href="#" class="text-white hover:text-gray-300 hover-transition" style="display: none;">技术交流</a>
+                <a href="#" class="text-white hover:text-gray-300 hover-transition" style="display: none;">赛事资讯</a>
+                <a href="#" class="text-white hover:text-gray-300 hover-transition" style="display: none;">我的资料</a>
+                <div class="avatar-dropdown" id="avatarDropdown" style="display: none;">
+                    <img id="userAvatar" class="avatar" src="" alt="用户头像">
+                    <div class="avatar-dropdown-content">
+                        <a href="./profiles.html">我的资料</a>
+                        <a href="#" onclick="logout()">退出登录</a>
+                    </div>
+                </div>
+                <a href="#" onclick="openLoginModal()" class="text-white 
+                hover:text-gray-300 hover-transition" id="topLoginBtn" style="display: none;">登录</a>
+                <a href="#" onclick="openRegisterModal()" class="text-white hover:text-gray-300 hover-transition"
+                    id="topRegisterBtn" style="display: none;">注册</a>
             </div>
         </div>
     </nav>
@@ -156,8 +208,7 @@
                 </div>
                 <button type="submit" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-2 
                     rounded hover:bg-gradient-to-r hover:from-blue-700 hover:to-purple-700 
-                    hover-transition
-                    id=" addPostButton">
+                    hover-transition" id="addPostButton">
                     发布
                 </button>
             </form>
@@ -231,11 +282,8 @@
         const pageMax = 10;
         let currentPage = 1;
         let totalPages = 1;
-        const boardIndex = {
-            'technology_exchange': 1,
-            'event_information': 2,
-            'equipment_discussion': 3
-        };
+        let boardTitleMap = {};
+        let boardIndex = {};
 
         function closeModalOutside(event) {
             const loginModal = document.getElementById('loginModal');
@@ -262,21 +310,31 @@
             e.preventDefault();
             const title = document.getElementById('newPostTitle').value;
             const content = document.getElementById('newPostContent').value;
-            const forumId = boardIndex[getQueryParam('board')];
+            const board = getQueryParam('board');
+            const forumId = boardIndex[board];
             const userId = getCookie('userId');
-
-            console.log(title, content, forumId, userId);
+            const token = getCookie('token');
+            console.log(token);
             try {
+
                 axios.post(`${baseURL}/posts/add`, {
                     'title': title,
                     'content': content,
                     'forumId': forumId,
                     'userId': userId,
-                }).then((response) => {
+                    
+                },{headers: {
+                        'token': token
+                    }}).then((response) => {
                     console.log(response.data);
-                    alert('帖子发布成功');
-                    closePostModal();
-                    loadPosts();
+                    if (response.data === "notLogin") {
+                        alert('请先登录');
+                    }
+                    else {
+                        alert('帖子发布成功');
+                        closePostModal();
+                        loadPosts();
+                    }
                 });
             } catch (error) {
                 console.error('发布帖子失败:', error);
@@ -285,24 +343,15 @@
 
         async function loadPosts() {
             autoLogin();
+            await fetchBoardData();
             const board = getQueryParam('board');
-            const boardTitleMap = {
-                'technology_exchange': '技术交流帖子列表',
-                'event_information': '赛事资讯帖子列表',
-                'equipment_discussion': '器材讨论帖子列表'
-            };
-            const boardIndex = {
-                'technology_exchange': 1,
-                'event_information': 2,
-                'equipment_discussion': 3
-            };
             const boardTitle = boardTitleMap[board] || '未知板块帖子列表';
             document.getElementById('boardTitle').textContent = boardTitle;
             try {
                 const postList = document.getElementById('postList');
                 postList.innerHTML = '';
-
-                axios.get(`http://localhost:7071/web/posts/loadDataList?forumId=${boardIndex[board]}&PageSize=${pageMax}&PageNo=${currentPage}`)
+                const orderBy = 'created_at desc';
+                axios.get(`${baseURL}/posts/loadDataList?forumId=${boardIndex[board]}&PageSize=${pageMax}&PageNo=${currentPage}&orderBy=${orderBy}`)
                     .then(response => {
                         const posts = response.data.data.list;
                         const totalCount = response.data.data.totalCount;
@@ -380,8 +429,46 @@
             return urlParams.get(param);
         }
 
+        async function fetchBoardData() {
+            try {
+                const response = await axios.get(`${baseURL}/forums/loadDataList`);
+                const list = response.data.data.list;
+                list.forEach(item => {
+                    boardTitleMap[item.forumName] = `${item.forumName}帖子列表`;
+                    boardIndex[item.forumName] = item.forumId;
+                });
+            } catch (error) {
+                console.error('获取论坛板块数据失败:', error);
+            }
+        }
 
-        window.onload = loadPosts;
+        window.onload = function () {
+            loadPosts();
+            const avatar = getCookie('avatar');
+            const avatarDropdown = document.getElementById('avatarDropdown');
+            const userAvatar = document.getElementById('userAvatar');
+            const topLoginBtn = document.getElementById('topLoginBtn');
+            const topRegisterBtn = document.getElementById('topRegisterBtn');
+            const token = getCookie('token');
+
+            if (token) {
+                topLoginBtn.style.display = 'none';
+                topRegisterBtn.style.display = 'none';
+                avatarDropdown.style.display = 'block';
+                userAvatar.src = avatar || 'https://picsum.photos/40/40';
+            }
+        }
+
+        function logout() {
+            const cookies = document.cookie.split("; ");
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i];
+                const eqPos = cookie.indexOf("=");
+                const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+                document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+            }
+            window.location.href = 'index.html';
+        }
     </script>
 </body>
 

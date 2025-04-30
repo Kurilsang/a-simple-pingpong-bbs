@@ -8,11 +8,11 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="easylive-common" />
-        <module name="easyjava" />
         <module name="easylive-web" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="easyjava" target="1.8" />
       <module name="easylive-admin" target="1.8" />
       <module name="pingpong-java" target="1.8" />
       <module name="pingpong-web" target="1.8" />

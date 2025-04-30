@@ -51,6 +51,45 @@
             text-decoration: none;
             cursor: pointer;
         }
+
+        /* 头像下拉菜单样式 */
+        .avatar-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .avatar-dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+            right: 0;
+            border-radius: 4px;
+        }
+
+        .avatar-dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .avatar-dropdown-content a:hover {
+            background-color: #f1f1f1;
+        }
+
+        .avatar-dropdown:hover .avatar-dropdown-content {
+            display: block;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
     </style>
 </head>
 
@@ -61,23 +100,25 @@
             <a href="#" class="text-white text-3xl font-extrabold tracking-wide">乒乓球论坛</a>
             <div class="flex space-x-6">
                 <a href="#" class="text-white hover:text-gray-300 hover-transition">首页</a>
-                <a href="#" class="text-white hover:text-gray-300 hover-transition">技术交流</a>
-                <a href="#" class="text-white hover:text-gray-300 hover-transition">赛事资讯</a>
-                <a href="#" class="text-white hover:text-gray-300 hover-transition">我的资料</a>
+                <a href="#" class="text-white hover:text-gray-300 hover-transition" style="display: none;">技术交流</a>
+                <a href="#" class="text-white hover:text-gray-300 hover-transition" style="display: none;">赛事资讯</a>
+                <div class="avatar-dropdown" id="avatarDropdown" style="display: none;">
+                    <img id="userAvatar" class="avatar" src="" alt="用户头像">
+                    <div class="avatar-dropdown-content">
+                        <a href="./profiles.html">我的资料</a>
+                        <a href="#" onclick="logout()">退出登录</a>
+                    </div>
+                </div>
                 <a href="#" onclick="openLoginModal()" class="text-white 
-                hover:text-gray-300 hover-transition"
-                id="topLoginBtn"
-                style="display: block;"
-                >登录</a>
+                hover:text-gray-300 hover-transition" id="topLoginBtn" style="display: block;">登录</a>
                 <a href="#" onclick="openRegisterModal()" class="text-white hover:text-gray-300 hover-transition"
-                id="topRegisterBtn"
-                style="display: block;">注册</a>
+                    id="topRegisterBtn" style="display: block;">注册</a>
             </div>
         </div>
     </nav>
 
     <!-- 搜索框 -->
-    <div class="container mx-auto p-8 flex justify-center">
+    <div class="container mx-auto p-8 flex justify-center" style="display: none;">
         <input type="text" placeholder="关键词搜索"
             class="border border-gray-300 p-3 rounded-l-lg w-96 focus:ring-blue-500 focus:border-blue-500">
         <button
@@ -87,7 +128,7 @@
     </div>
 
     <!-- 公告栏 -->
-    <div class="container mx-auto p-6 bg-white rounded-xl shadow-lg mb-6">
+    <div class="container mx-auto p-6 bg-white rounded-xl shadow-lg mb-6" style="display: none;">
         <h2 class="text-2xl font-bold text-gray-800 mb-4">公告通知</h2>
         <ul>
             <li class="mb-2 flex items-center">
@@ -102,25 +143,9 @@
     </div>
 
     <!-- 板块列表 -->
-    <div class="container mx-auto p-6 bg-white rounded-xl shadow-lg">
+    <div class="container mx-auto p-6 bg-white rounded-xl shadow-lg" id="forumList">
         <h2 class="text-2xl font-bold text-gray-800 mb-6">论坛板块</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div class="border border-gray-200 p-6 rounded-xl shadow-sm hover:shadow-lg hover-transition">
-                <h3 class="text-xl font-bold text-gray-800 mb-3">技术交流</h3>
-                <p class="text-gray-600 mb-4">分享乒乓球技术心得、技巧等。</p>
-                <a href="/posts.html?board=technology_exchange" class="text-blue-600 hover:underline">进入板块</a>
-            </div>
-            <div class="border border-gray-200 p-6 rounded-xl shadow-sm hover:shadow-lg hover-transition">
-                <h3 class="text-xl font-bold text-gray-800 mb-3">赛事资讯</h3>
-                <p class="text-gray-600 mb-4">最新的乒乓球赛事信息。</p>
-                <a href="/posts.html?board=event_information" class="text-blue-600 hover:underline">进入板块</a>
-            </div>
-            <div class="border border-gray-200 p-6 rounded-xl shadow-sm hover:shadow-lg hover-transition">
-                <h3 class="text-xl font-bold text-gray-800 mb-3">器材讨论</h3>
-                <p class="text-gray-600 mb-4">交流乒乓球器材的选择和使用。</p>
-                <a href="/posts.html?board=equipment_discussion" class="text-blue-600 hover:underline">进入板块</a>
-            </div>
-        </div>
+        <!-- 动态加载的板块将显示在这里 -->
     </div>
 
     <!-- 登录模态框 -->
@@ -187,8 +212,67 @@
     </footer>
 
     <script src="./js/login.js"></script>
+    <script>
+        function loadForumList() {
+            axios.get(`${baseURL}/forums/loadDataList`)
+                .then(response => {
+                    console.log(response.data.data)
+                    const forumList = response.data.data.list;
+                    const forumListContainer = document.getElementById('forumList');
+                    const grid = document.createElement('div');
+                    grid.classList.add('grid', 'grid-cols-1', 'md:grid-cols-2', 'lg:grid-cols-3', 'gap-6');
 
-    
+                    forumList.forEach(forum => {
+                        const forumDiv = document.createElement('div');
+                        forumDiv.classList.add('border', 'border-gray-200', 'p-6', 'rounded-xl', 'shadow-sm', 'hover:shadow-lg', 'hover-transition');
+                        forumDiv.innerHTML = `
+                            <h3 class="text-xl font-bold text-gray-800 mb-3">${forum.forumName}</h3>
+                            <p class="text-gray-600 mb-4">${forum.description}</p>
+                            <a href="/posts.html?board=${forum.forumName}" class="text-blue-600 hover:underline">进入板块</a>
+                        `;
+                        grid.appendChild(forumDiv);
+                    });
+
+                    forumListContainer.appendChild(grid);
+                })
+                .catch(error => {
+                    console.error('加载论坛板块失败:', error);
+                });
+        }
+
+        window.onload = function () {
+            autoLogin();
+            loadForumList();
+            const avatar = getCookie('avatar');
+            const avatarDropdown = document.getElementById('avatarDropdown');
+            const userAvatar = document.getElementById('userAvatar');
+            const topLoginBtn = document.getElementById('topLoginBtn');
+            const topRegisterBtn = document.getElementById('topRegisterBtn');
+            const token = getCookie('token');
+
+            if (token) {
+                topLoginBtn.style.display = 'none';
+                topRegisterBtn.style.display = 'none';
+                avatarDropdown.style.display = 'block';
+                userAvatar.src = avatar || 'https://picsum.photos/40/40';
+            }
+        }
+
+ 
+
+
+
+        function logout() {
+            const cookies = document.cookie.split("; ");
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i];
+                const eqPos = cookie.indexOf("=");
+                const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+                document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+            }
+            window.location.href = 'index.html';
+        }
+    </script>
 </body>
 
 </html>

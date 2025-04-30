@@ -147,6 +147,45 @@
             border-radius: 10px;
             padding: 50px
         }
+
+        /* 头像下拉菜单样式 */
+        .avatar-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .avatar-dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+            right: 0;
+            border-radius: 0.5rem;
+        }
+
+        .avatar-dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .avatar-dropdown-content a:hover {
+            background-color: #f1f1f1;
+        }
+
+        .avatar-dropdown:hover .avatar-dropdown-content {
+            display: block;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
     </style>
 </head>
 
@@ -157,13 +196,20 @@
             <a href="index.html" class="text-white text-3xl font-extrabold tracking-wide">乒乓球论坛</a>
             <div class="flex space-x-6">
                 <a href="/index.html" class="text-white hover:text-gray-300 hover-transition">首页</a>
-                <a href="#" class="text-white hover:text-gray-300 hover-transition">技术交流</a>
-                <a href="#" class="text-white hover:text-gray-300 hover-transition">赛事资讯</a>
-                <a href="#" class="text-white hover:text-gray-300 hover-transition">我的资料</a>
+                <a href="#" class="text-white hover:text-gray-300 hover-transition" style="display: none;">技术交流</a>
+                <a href="#" class="text-white hover:text-gray-300 hover-transition" style="display: none;">赛事资讯</a>
+                <a href="#" class="text-white hover:text-gray-300 hover-transition" style="display: none;">我的资料</a>
                 <a href="#" onclick="openLoginModal()" class="text-white hover:text-gray-300 hover-transition"
-                    id="topLoginBtn">登录</a>
+                    id="topLoginBtn" style="display: none;">登录</a>
                 <a href="#" onclick="openRegisterModal()" class="text-white hover:text-gray-300 hover-transition"
-                    id="topRegisterBtn">注册</a>
+                    id="topRegisterBtn" style="display: none;">注册</a>
+                <div class="avatar-dropdown" id="avatarDropdown" style="display: none;">
+                    <img id="userAvatar" class="avatar" src="" alt="用户头像">
+                    <div class="avatar-dropdown-content">
+                        <a href="./profiles.html">我的资料</a>
+                        <a href="#" onclick="logout()">退出登录</a>
+                    </div>
+                </div>
             </div>
         </div>
     </nav>
@@ -257,18 +303,7 @@
         }
 
         // 打开/关闭模态框
-        function openLoginModal() {
-            document.getElementById('loginModal').style.display = 'block';
-        }
-        function closeLoginModal() {
-            document.getElementById('loginModal').style.display = 'none';
-        }
-        function openRegisterModal() {
-            document.getElementById('registerModal').style.display = 'block';
-        }
-        function closeRegisterModal() {
-            document.getElementById('registerModal').style.display = 'none';
-        }
+
         function closeModalOutside(event) {
             const modals = ['loginModal', 'registerModal'];
             modals.forEach(modalId => {
@@ -285,8 +320,20 @@
 
             await loadPostDetails(postId);
             await loadReplies(postId);
+            const avatar = getCookie('avatar');
+            const avatarDropdown = document.getElementById('avatarDropdown');
+            const userAvatar = document.getElementById('userAvatar');
+            const topLoginBtn = document.getElementById('topLoginBtn');
+            const topRegisterBtn = document.getElementById('topRegisterBtn');
+            const token = getCookie('token');
+
+            if (token) {
+                topLoginBtn.style.display = 'none';
+                topRegisterBtn.style.display = 'none';
+                avatarDropdown.style.display = 'block';
+                userAvatar.src = avatar || 'https://picsum.photos/40/40';
+            }
         };
-  
 
         // 加载帖子详情
         async function loadPostDetails(postId) {
@@ -304,7 +351,8 @@
         // 加载回复列表
         async function loadReplies(postId) {
             try {
-                axios.get(`${baseURL}/comments/loadCommentsList?postId=${postId}`).then(response => {
+                const orderBy = 'created_at desc';
+                axios.get(`${baseURL}/comments/loadCommentsList?postId=${postId}&orderBy=${orderBy}`).then(response => {
                     console.log(response);
                     const replies = response.data.data.list;
                     console.log(replies);
@@ -321,26 +369,39 @@
                         </div>
                     </div>
                 `).join('');
-                }
-                )
+                });
             } catch (error) {
                 console.error('加载回复失败:', error);
             }
         }
 
         // 发表回复
-        async function postReply() {
+        function postReply() {
             const content = document.getElementById('replyInput').value.trim();
             if (!content) return;
             const userId = getCookie('userId');
+            console.log(getCookie('token'))
+            const token = getCookie('token');
+            console.log(token)
             try {
-                axios.post(`${baseURL}/comments/add?postId=` + postId + "&content=" + content + "&userId=" + userId)
+                axios.post(`${baseURL}/comments/add`, {
+                    userId: userId,
+                    postId: postId,
+                    content: content,
+                    
+                },{headers: {
+                        'token': token
+                    }})
                     .then((response) => {
-                        alert('回复发表成功');
-                        document.getElementById('replyInput').value = '';
-                        loadReplies(postId);
-                    })
-                    ;
+                        if (response.data === "notLogin") {
+                            alert('请先登录');
+                        }
+                        else {
+                            alert('回复发表成功');
+                            document.getElementById('replyInput').value = '';
+                            loadReplies(postId);
+                        }
+                    });
             } catch (error) {
                 console.error('发表回复失败:', error);
                 alert('回复发表失败，请检查网络或重试');
@@ -359,6 +420,17 @@
             document.cookie = `${name}=${value}; expires=${date.toUTCString()}; path=/`;
         }
 
+        // 退出登录
+        function logout() {
+            const cookies = document.cookie.split("; ");
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i];
+                const eqPos = cookie.indexOf("=");
+                const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+                document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+            }
+            window.location.href = 'index.html';
+        }
     </script>
 </body>
 
